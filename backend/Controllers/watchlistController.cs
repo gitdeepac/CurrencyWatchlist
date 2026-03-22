@@ -6,15 +6,16 @@ using backend.Data;
 using backend.Dtos.Watchlist;
 using backend.Mappers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
   [Route("api/[Controller]")]
   [ApiController]
-  public class watchlistController : ControllerBase
+  public class watchlistsController : ControllerBase
   {
     private readonly ApplicationDbContext _context;
-    public watchlistController(ApplicationDbContext applicationDbContext)
+    public watchlistsController(ApplicationDbContext applicationDbContext)
     {
         _context = applicationDbContext;
     }
@@ -22,16 +23,17 @@ namespace backend.Controllers
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var watchlists = _context.Watchlist.ToList()
-        .Select(wl => wl.ToWatchlistDto());
+        var watchlists = await _context.Watchlist.ToListAsync();
 
-        return Ok(watchlists);
+        var watchlistDto = watchlists.Select(wl => wl.ToWatchlistDto());
+
+        return Ok(watchlistDto);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById([FromRoute] int id)
     {
-      var watchlist = _context.Watchlist.Find(id);
+      var watchlist = await _context.Watchlist.FindAsync(id);
       
       if(watchlist == null)
       {
@@ -45,9 +47,26 @@ namespace backend.Controllers
     public async Task<IActionResult> Create([FromBody] CreateWatchlistRequestDto watchlistDto)
     {
       var watchlistModel = watchlistDto.ToWatchlistFromCreateDTO();
-      _context.Watchlist.Add(watchlistModel);
-      _context.SaveChanges();
+      await _context.Watchlist.AddAsync(watchlistModel);
+      await _context.SaveChangesAsync();
       return CreatedAtAction(nameof(GetById), new { id = watchlistModel.Id}, watchlistModel.ToWatchlistDto());
+    }
+
+    [HttpDelete]
+    [Route("{Id}")]
+    public async Task<IActionResult> Delete([FromRoute] int Id)
+    {
+      var watchlistModel = await _context.Watchlist.FirstOrDefaultAsync(x => x.Id == Id);
+
+      if(watchlistModel == null)
+      {
+        return NotFound();
+      }
+
+      _context.Watchlist.Remove(watchlistModel);
+      await _context.SaveChangesAsync();
+
+      return NoContent();
     }
   } 
 }
