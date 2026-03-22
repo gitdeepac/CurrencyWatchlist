@@ -1,0 +1,20 @@
+# ===========================
+# .NET C# Backend
+# ===========================
+
+# Build folders
+bin/
+obj/
+
+# SQLite database
+currency_watchlist.db
+currency_watchlist.db-shm
+currency_watchlist.db-wal
+
+# User specific
+.vs/
+.vscode/
+
+
+
+
