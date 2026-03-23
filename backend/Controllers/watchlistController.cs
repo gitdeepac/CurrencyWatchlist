@@ -23,6 +23,9 @@ namespace backend.Controllers
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
+        if(!ModelState.IsValid)
+          return BadRequest(ModelState);
+
         var watchlists = await _context.Watchlist.ToListAsync();
 
         var watchlistDto = watchlists.Select(wl => wl.ToWatchlistDto());
@@ -30,7 +33,7 @@ namespace backend.Controllers
         return Ok(watchlistDto);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById([FromRoute] int id)
     {
       var watchlist = await _context.Watchlist.FindAsync(id);
@@ -46,6 +49,9 @@ namespace backend.Controllers
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateWatchlistRequestDto watchlistDto)
     {
+       if(!ModelState.IsValid)
+          return BadRequest(ModelState);
+
       var watchlistModel = watchlistDto.ToWatchlistFromCreateDTO();
       await _context.Watchlist.AddAsync(watchlistModel);
       await _context.SaveChangesAsync();
@@ -53,9 +59,12 @@ namespace backend.Controllers
     }
 
     [HttpDelete]
-    [Route("{Id}")]
+    [Route("{Id:int}")]
     public async Task<IActionResult> Delete([FromRoute] int Id)
     {
+       if(!ModelState.IsValid)
+          return BadRequest(ModelState);
+
       var watchlistModel = await _context.Watchlist.FirstOrDefaultAsync(x => x.Id == Id);
 
       if(watchlistModel == null)
