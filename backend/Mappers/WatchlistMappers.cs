@@ -22,7 +22,7 @@ namespace backend.Mappers
     {
       return new Watchlist
       {
-        Name = watchlistRequestDto.Name,
+        Name = watchlistRequestDto.Name.Trim(),
         CreateAt = DateTime.UtcNow
       };
     }

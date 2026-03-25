@@ -15,6 +15,6 @@ namespace backend.Data
         }
 
         public DbSet<Watchlist> Watchlist { get; set; }
-        public DbSet<WatchlistItem> WatchlistItems { get; set; }
+        public DbSet<WatchlistItems> WatchlistItems { get; set; }
     }
 }

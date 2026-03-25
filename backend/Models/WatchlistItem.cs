@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace backend.Models
 {
-    public class WatchlistItem
+    public class WatchlistItems
     {
         public int Id { get; set; }
         public int? WatchlistId { get; set; }
@@ -17,8 +17,7 @@ namespace backend.Models
         public string BaseCurrency { get; set; } = String.Empty;
         [Column(TypeName = "char(3)")]
         public string QuoteCurrency { get; set; } = String.Empty;
-        
-        public DateTime CreateAt { get; set; } = DateTime.Now;
+        public DateTime CreateAt { get; set; } = DateTime.UtcNow;
         
     }
 }
