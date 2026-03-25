@@ -26,7 +26,7 @@ namespace backend.Controllers
         if(!ModelState.IsValid)
           return BadRequest(ModelState);
 
-        var watchlists = await _context.Watchlist.ToListAsync();
+        var watchlists = await _context.Watchlist.Include(wl => wl.Items).ToListAsync();
 
         var watchlistDto = watchlists.Select(wl => wl.ToWatchlistDto());
 

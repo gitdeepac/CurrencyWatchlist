@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using backend.Dtos.Watchlist;
+using backend.Dtos.WatchlistItem;
 using backend.Models;
 
 namespace backend.Mappers
@@ -13,8 +14,16 @@ namespace backend.Mappers
     {
       return new WatchlistDto
       {
-        Id = watchlistModel.Id,
-        Name = watchlistModel.Name
+        Id       = watchlistModel.Id,
+        Name     = watchlistModel.Name,
+        CreateAt = watchlistModel.CreateAt,
+        Items    = watchlistModel.Items.Select(item => new WatchlistItemDto
+        {
+            Id            = item.Id,
+            BaseCurrency  = item.BaseCurrency,
+            QuoteCurrency = item.QuoteCurrency,
+            WatchlistId   = item.WatchlistId ?? 0,
+        }).ToList()
       };
     }
 
