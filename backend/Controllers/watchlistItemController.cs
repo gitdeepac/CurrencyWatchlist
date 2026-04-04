@@ -56,6 +56,13 @@ namespace backend.Controllers
       if (!watchlistExists)
         return NotFound(new { message = $"Watchlist with ID {watchlistId} does not exist." });
 
+      var itemExists = await _context.WatchlistItems
+        .AnyAsync(x => x.WatchlistId == watchlistId 
+                    && x.BaseCurrency == watchlistItemDto.BaseCurrency && x.QuoteCurrency == watchlistItemDto.QuoteCurrency);
+
+    if (itemExists)
+        return Conflict(new { message = "This item already exists in the watchlist." });
+
 
       var watchlistItem = watchlistItemDto.ToWatchlistItemFromCreateDTO(watchlistId);
 

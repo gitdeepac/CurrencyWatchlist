@@ -16,5 +16,9 @@ namespace backend.Data
 
         public DbSet<Watchlist> Watchlist { get; set; }
         public DbSet<WatchlistItems> WatchlistItems { get; set; }
+        public DbSet<AlertEvent> AlertEvent { get; set; }
+        public DbSet<AlertRule> AlertRule {get; set; }
+        public DbSet<RateSnapShot> RateSnapShot {get; set; }
+
     }
 }
