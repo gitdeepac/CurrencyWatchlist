@@ -1,4 +1,5 @@
 using backend.Data;
+using backend.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -15,7 +16,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
+
 builder.Services.AddHttpClient();
+
+builder.Services.AddScoped<RateRefreshService>();
+
 
 var app = builder.Build();
 
