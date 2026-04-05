@@ -21,7 +21,7 @@ namespace backend.Controllers
     }
 
     [ApiExplorerSettings(IgnoreApi = true)]
-    [HttpGet("{id:int}")]
+    [HttpGet("{Id:int}")]
     public async Task<IActionResult> GetById([FromRoute] int watchlistId, [FromRoute] int id)
     {
       if (!ModelState.IsValid)

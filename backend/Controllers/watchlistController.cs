@@ -17,57 +17,57 @@ namespace backend.Controllers
     private readonly ApplicationDbContext _context;
     public watchlistsController(ApplicationDbContext applicationDbContext)
     {
-        _context = applicationDbContext;
+      _context = applicationDbContext;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        if(!ModelState.IsValid)
-          return BadRequest(ModelState);
+      if (!ModelState.IsValid)
+        return BadRequest(ModelState);
 
-        var watchlists = await _context.Watchlist.Include(wl => wl.Items).ToListAsync();
+      var watchlists = await _context.Watchlist.Include(wl => wl.Items).ToListAsync();
 
-        var watchlistDto = watchlists.Select(wl => wl.ToWatchlistDto());
+      var watchlistDto = watchlists.Select(wl => wl.ToWatchlistDto());
 
-        return Ok(watchlistDto);
+      return Ok(watchlistDto);
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{Id:int}")]
     public async Task<IActionResult> GetById([FromRoute] int id)
     {
       var watchlist = await _context.Watchlist.FindAsync(id);
-      
-      if(watchlist == null)
+
+      if (watchlist == null)
       {
-          return NotFound();
+        return NotFound();
       }
-      
+
       return Ok(watchlist.ToWatchlistDto());
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateWatchlistRequestDto watchlistDto)
     {
-       if(!ModelState.IsValid)
-          return BadRequest(ModelState);
+      if (!ModelState.IsValid)
+        return BadRequest(ModelState);
 
       var watchlistModel = watchlistDto.ToWatchlistFromCreateDTO();
       await _context.Watchlist.AddAsync(watchlistModel);
       await _context.SaveChangesAsync();
-      return CreatedAtAction(nameof(GetById), new { id = watchlistModel.Id}, watchlistModel.ToWatchlistDto());
+      return CreatedAtAction(nameof(GetById), new { id = watchlistModel.Id }, watchlistModel.ToWatchlistDto());
     }
 
     [HttpDelete]
     [Route("{Id:int}")]
     public async Task<IActionResult> Delete([FromRoute] int Id)
     {
-       if(!ModelState.IsValid)
-          return BadRequest(ModelState);
+      if (!ModelState.IsValid)
+        return BadRequest(ModelState);
 
       var watchlistModel = await _context.Watchlist.FirstOrDefaultAsync(x => x.Id == Id);
 
-      if(watchlistModel == null)
+      if (watchlistModel == null)
       {
         return NotFound();
       }

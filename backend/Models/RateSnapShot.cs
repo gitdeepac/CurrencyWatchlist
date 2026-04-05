@@ -11,9 +11,8 @@ namespace backend.Models
 
         public String BaseCurrency { get; set; } = String.Empty;
         public String QuoteCurrency { get; set; } = String.Empty;
-        public int Rate { get; set; } 
+        public Decimal Rate { get; set; } 
         public DateTime SourceTimestamp { get; set; }
-
-        public DateTime FechedId { get; set; }
+        public DateTime CreateAt { get; set; } = DateTime.Now;
     }
 }
