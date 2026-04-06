@@ -32,7 +32,7 @@ namespace backend.Mappers
 			return new Watchlist
 			{
 				Name = watchlistRequestDto.Name.Trim(),
-				CreateAt = DateTime.UtcNow
+				CreateAt = DateTime.Now
 			};
 		}
 	}
