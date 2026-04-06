@@ -57,19 +57,24 @@ namespace backend.Services
 
 					var apiResponse = await httpClient.GetFromJsonAsync<ExternalApiRawResponse>(url);
 
-					var rateValue = apiResponse?.Rates.FirstOrDefault().Value;
+					var rateValue = apiResponse?.Rate;
 
 					if (apiResponse != null && rateValue != null)
 					{
 						return new RateSnapShotDto
 						{
 							BaseCurrency = apiResponse.Base,
-							QuoteCurrency = apiResponse.Rates.Keys.FirstOrDefault() ?? "",
+							QuoteCurrency = apiResponse.Quote ?? "",
 							Rate = (decimal)rateValue,
-							SourceTimestamp = DateTime.Parse(apiResponse.Date),
+							SourceTimestamp = apiResponse.Date.ToDateTime(TimeOnly.MinValue),
 							FetchedAt = DateTime.Now
 						};
 					}
+					return null;
+				}
+				catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+				{
+					_logger.LogWarning("Invalid currency pair {Base}/{Quote}", pair.BaseCurrency, pair.QuoteCurrency);
 					return null;
 				}
 				catch (HttpRequestException ex)

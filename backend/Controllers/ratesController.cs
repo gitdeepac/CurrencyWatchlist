@@ -21,13 +21,17 @@ namespace backend.Controllers
 	{
 		// Db context
 		private readonly RateRefreshService _rateRefreshService;
+		private readonly LatestRateService _latestRateService;
+		private readonly HistoryRateService _historyRateService;
 		private readonly ILogger<ratesController> _logger;
 
 
 
-		public ratesController(RateRefreshService rateRefreshService, ILogger<ratesController> logger)
+		public ratesController(RateRefreshService rateRefreshService, LatestRateService latestRateService, HistoryRateService historyRateService, ILogger<ratesController> logger)
 		{
 			_rateRefreshService = rateRefreshService;
+			_latestRateService = latestRateService;
+			_historyRateService = historyRateService;
 			_logger = logger;
 		}
 
@@ -50,6 +54,61 @@ namespace backend.Controllers
 				message = result.Message,
 				created = result.TotalCreatedRecords,
 				updated = result.TotalUpdatedRecords
+			});
+		}
+
+		[HttpGet("latest")]
+		public async Task<IActionResult> GetLastestRate([FromQuery] string baseCur, [FromQuery] string quoteCur)
+		{
+			if (string.IsNullOrWhiteSpace(baseCur) || string.IsNullOrWhiteSpace(quoteCur))
+			{
+				return BadRequest(new
+				{
+					message = "Both base and quote currency are required."
+				});
+			}
+
+			var result = await _latestRateService.GetLatestRateAsync(baseCur, quoteCur);
+			if (result == null)
+			{
+				return NotFound(new
+				{
+					message = $"Could not fetch live rate for {baseCur}/{quoteCur}. Check the currency codes and try again."
+				});
+			}
+
+			return Ok(new
+			{
+				status = "success",
+				message = "Lastest exchange rates fetched successfully",
+				count = 1,
+				records = result
+			});
+		}
+
+		[HttpGet("history")]
+		public async Task<IActionResult> GetHistoryRateAsync([FromQuery] string baseCur, [FromQuery] string quoteCur, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
+		{
+			if (string.IsNullOrWhiteSpace(baseCur) || string.IsNullOrWhiteSpace(quoteCur))
+			{
+				return BadRequest(new
+				{
+					message = "Both base and quotes are required."
+				});
+			}
+
+			if (startDate >= endDate)
+			{
+				return BadRequest(new { message = "startDate must be before endDate." });
+			}
+
+			var results = await _historyRateService.GetHistoryRateAsync(baseCur, quoteCur, startDate, endDate);
+			return Ok(new
+			{
+				status = "success",
+				message = "Historical exchange rates fetched successfully",
+				count = results.Count,
+				records = results
 			});
 		}
 	}

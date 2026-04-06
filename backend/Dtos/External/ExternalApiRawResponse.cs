@@ -7,9 +7,9 @@ namespace backend.Dtos.External
 {
 	public class ExternalApiRawResponse
 	{
-		public decimal Amount { get; set; }
-		public string Base { get; set; } = string.Empty;
-		public string Date { get; set; } = string.Empty;
-		public Dictionary<string, decimal> Rates { get; set; } = new();
+		public DateOnly Date { get; set; }  // "2026-04-05"
+		public string Base { get; set; } = string.Empty;  // "AUD"
+		public string Quote { get; set; } = string.Empty;  // "INR"
+		public decimal Rate { get; set; }                  // 64.207
 	}
 }

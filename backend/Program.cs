@@ -20,7 +20,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<RateRefreshService>();
-
+builder.Services.AddScoped<LatestRateService>();
+builder.Services.AddScoped<HistoryRateService>();
 
 var app = builder.Build();
 

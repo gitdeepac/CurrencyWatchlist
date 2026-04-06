@@ -62,7 +62,7 @@ namespace backend.Controllers
 
 			if (itemExists)
 				return Conflict(new { message = "This item already exists in the watchlist." });
-
+			
 
 			var watchlistItem = watchlistItemDto.ToWatchlistItemFromCreateDTO(watchlistId);
 
