@@ -4,7 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using backend.Data;
 using backend.Dtos.Watchlist;
+using backend.Helpers;
 using backend.Mappers;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,20 +32,24 @@ namespace backend.Controllers
 
 			var watchlistDto = watchlists.Select(wl => wl.ToWatchlistDto());
 
-			return Ok(watchlistDto);
+			return Ok(ApiResponse<object?>.Success(
+				data: watchlistDto,
+				message: "Successfully fetch list",
+				statusCode: 200
+			));
 		}
 
-		[HttpGet("{Id:int}")]
+		[HttpGet("{id:int}")]
 		public async Task<IActionResult> GetById([FromRoute] int id)
 		{
 			var watchlist = await _context.Watchlist.FindAsync(id);
 
 			if (watchlist == null)
 			{
-				return NotFound();
+				return NotFound(ApiResponse<object?>.NotFound("No record found"));
 			}
 
-			return Ok(watchlist.ToWatchlistDto());
+			return Ok(ApiResponse<object?>.Success(watchlist, "Successfully Fetch Watchlist", 200));
 		}
 
 		[HttpPost]
@@ -55,7 +61,8 @@ namespace backend.Controllers
 			var watchlistModel = watchlistDto.ToWatchlistFromCreateDTO();
 			await _context.Watchlist.AddAsync(watchlistModel);
 			await _context.SaveChangesAsync();
-			return CreatedAtAction(nameof(GetById), new { id = watchlistModel.Id }, watchlistModel.ToWatchlistDto());
+			return CreatedAtAction(nameof(GetById), new { id = watchlistModel.Id },
+				ApiResponse<object?>.Success(watchlistModel.ToWatchlistDto(), "Successfully created watchlist", 201));
 		}
 
 		[HttpDelete]
@@ -69,13 +76,13 @@ namespace backend.Controllers
 
 			if (watchlistModel == null)
 			{
-				return NotFound();
+				return NotFound(ApiResponse<object?>.NotFound("No record found"));
 			}
 
 			_context.Watchlist.Remove(watchlistModel);
 			await _context.SaveChangesAsync();
 
-			return NoContent();
+			return Ok(ApiResponse<object?>.Success(null, $"Successfully Deleted Watchlist {Id}", 200));
 		}
 	}
 }

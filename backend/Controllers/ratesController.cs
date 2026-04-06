@@ -7,6 +7,7 @@ using backend.Data;
 using backend.Dtos.External;
 using backend.Dtos.Rate;
 using backend.Dtos.WatchlistItem;
+using backend.Helpers;
 using backend.Models;
 using backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -17,17 +18,17 @@ namespace backend.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class ratesController : ControllerBase
+	public class RatesController : ControllerBase
 	{
 		// Db context
 		private readonly RateRefreshService _rateRefreshService;
 		private readonly LatestRateService _latestRateService;
 		private readonly HistoryRateService _historyRateService;
-		private readonly ILogger<ratesController> _logger;
+		private readonly ILogger<RatesController> _logger;
 
 
 
-		public ratesController(RateRefreshService rateRefreshService, LatestRateService latestRateService, HistoryRateService historyRateService, ILogger<ratesController> logger)
+		public RatesController(RateRefreshService rateRefreshService, LatestRateService latestRateService, HistoryRateService historyRateService, ILogger<RatesController> logger)
 		{
 			_rateRefreshService = rateRefreshService;
 			_latestRateService = latestRateService;
@@ -42,19 +43,14 @@ namespace backend.Controllers
 			var result = await _rateRefreshService.RefreshRateAsync();
 			if (!result.Success)
 			{
-				return StatusCode(500, new
-				{
-					message = result.Message,
-					saved = 0
-				});
+				return StatusCode(500, ApiResponse<object>.ServerError(result.Message));
 			}
 
-			return Accepted(new
-			{
-				message = result.Message,
-				created = result.TotalCreatedRecords,
-				updated = result.TotalUpdatedRecords
-			});
+			return Accepted(ApiResponse<object?>.Success(
+				data: null,
+				message: result.Message,
+				statusCode: 200
+			));
 		}
 
 		[HttpGet("latest")]
@@ -62,28 +58,20 @@ namespace backend.Controllers
 		{
 			if (string.IsNullOrWhiteSpace(baseCur) || string.IsNullOrWhiteSpace(quoteCur))
 			{
-				return BadRequest(new
-				{
-					message = "Both base and quote currency are required."
-				});
+				return BadRequest(ApiResponse<object?>.Error(null, "Both base and quote currency are required.", 400));
 			}
 
 			var result = await _latestRateService.GetLatestRateAsync(baseCur, quoteCur);
 			if (result == null)
 			{
-				return NotFound(new
-				{
-					message = $"Could not fetch live rate for {baseCur}/{quoteCur}. Check the currency codes and try again."
-				});
+				return NotFound(ApiResponse<object?>.NotFound("Both base and quote currency are required."));
 			}
 
-			return Ok(new
-			{
-				status = "success",
-				message = "Lastest exchange rates fetched successfully",
-				count = 1,
-				records = result
-			});
+			return Ok(ApiResponse<object?>.Success(
+				data: result,
+				message: "Latest exchange rates fetched successfully",
+				statusCode: 200
+			));
 		}
 
 		[HttpGet("history")]
@@ -91,25 +79,20 @@ namespace backend.Controllers
 		{
 			if (string.IsNullOrWhiteSpace(baseCur) || string.IsNullOrWhiteSpace(quoteCur))
 			{
-				return BadRequest(new
-				{
-					message = "Both base and quotes are required."
-				});
+				return BadRequest(ApiResponse<object?>.Error(null, "Both base and quote currency are required.", 400));
 			}
 
 			if (startDate >= endDate)
 			{
-				return BadRequest(new { message = "startDate must be before endDate." });
+				return BadRequest(ApiResponse<object?>.Error(null, "startDate must be before endDate.", 400));
 			}
 
 			var results = await _historyRateService.GetHistoryRateAsync(baseCur, quoteCur, startDate, endDate);
-			return Ok(new
-			{
-				status = "success",
-				message = "Historical exchange rates fetched successfully",
-				count = results.Count,
-				records = results
-			});
+			return Ok(ApiResponse<object?>.Success(
+				data: results,
+				message: "Historical exchange rates fetched successfully",
+				statusCode: 200
+			));
 		}
 	}
 }
