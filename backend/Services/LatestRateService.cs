@@ -69,6 +69,8 @@ namespace backend.Services
 			}
 		}
 	}
+
+	// Internal result model — decoupled from external API 
 	public class LiveRateResult
 	{
 		public string BaseCurrency { get; set; } = string.Empty;

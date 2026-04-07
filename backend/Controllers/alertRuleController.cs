@@ -11,16 +11,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
+
+	// Manages alert rules.
 	[Route("api/[controller]")]
 	[ApiController]
 	public class AlertRuleController : ControllerBase
 	{
 
+		// Injected via DI
 		public readonly ApplicationDbContext _context;
 		public AlertRuleController(ApplicationDbContext context)
 		{
 			_context = context;
 		}
+
+		// Returns all records
 		[HttpGet]
 		public async Task<IActionResult> GetAllRule()
 		{
@@ -36,6 +41,8 @@ namespace backend.Controllers
 				statusCode: 200
 			));
 		}
+
+		// Returns single record, 404 if missing
 		[HttpGet("{id:int}")]
 		public async Task<IActionResult> GetById([FromRoute] int id)
 		{
@@ -49,6 +56,7 @@ namespace backend.Controllers
 			return Ok(ApiResponse<object?>.Success(alertRuleList, "Successfully fetch alert rule", 200));
 		}
 
+		// Post new alert rule from request body
 		[HttpPost]
 		public async Task<IActionResult> CreateAlertRule([FromBody] CreateAlertRuleRequestDto createRateAlertRequestDto)
 		{
@@ -64,6 +72,8 @@ namespace backend.Controllers
 				ApiResponse<object?>.Success(rateAlertRuleModel.ToAlertRuleListDto(), "Successfully created alert rule.", 201));
 		}
 
+
+		// Hard delete — no soft delete
 		[HttpDelete]
 		[Route("{Id:int}")]
 		public async Task<IActionResult> Delete([FromRoute] int Id)

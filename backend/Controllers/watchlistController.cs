@@ -12,16 +12,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
+
+	// Manages watchlists and their associated items.
+
 	[Route("api/[Controller]")]
 	[ApiController]
 	public class WatchlistsController : ControllerBase
 	{
+		// DB context injected via DI
 		private readonly ApplicationDbContext _context;
 		public WatchlistsController(ApplicationDbContext applicationDbContext)
 		{
 			_context = applicationDbContext;
 		}
 
+		// Returns all watchlists with items
 		[HttpGet]
 		public async Task<IActionResult> GetAll()
 		{
@@ -39,6 +44,8 @@ namespace backend.Controllers
 			));
 		}
 
+
+		// Returns a single watchlist by ID — items not included here, intentional
 		[HttpGet("{id:int}")]
 		public async Task<IActionResult> GetById([FromRoute] int id)
 		{
@@ -52,6 +59,7 @@ namespace backend.Controllers
 			return Ok(ApiResponse<object?>.Success(watchlist, "Successfully Fetch Watchlist", 200));
 		}
 
+		// Creates a new watchlist
 		[HttpPost]
 		public async Task<IActionResult> Create([FromBody] CreateWatchlistRequestDto watchlistDto)
 		{
@@ -65,6 +73,8 @@ namespace backend.Controllers
 				ApiResponse<object?>.Success(watchlistModel.ToWatchlistDto(), "Successfully created watchlist", 201));
 		}
 
+
+		// Hard delete — no soft delete, intentional
 		[HttpDelete]
 		[Route("{Id:int}")]
 		public async Task<IActionResult> Delete([FromRoute] int Id)

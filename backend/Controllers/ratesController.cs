@@ -16,11 +16,15 @@ using Microsoft.Extensions.Logging;
 
 namespace backend.Controllers
 {
+
+
+	// Handles exchange rate operations — refresh, latest, and historical lookups.
 	[Route("api/[controller]")]
 	[ApiController]
 	public class RatesController : ControllerBase
 	{
-		// Db context
+
+		// Services injected via DI — each owns its own concern
 		private readonly RateRefreshService _rateRefreshService;
 		private readonly LatestRateService _latestRateService;
 		private readonly HistoryRateService _historyRateService;
@@ -36,6 +40,7 @@ namespace backend.Controllers
 			_logger = logger;
 		}
 
+		// Triggers external rate sync — delegated entirely to RateRefreshService
 		[HttpPost("refresh")]
 		public async Task<IActionResult> RefreshRate()
 		{
@@ -49,10 +54,11 @@ namespace backend.Controllers
 			return Accepted(ApiResponse<object?>.Success(
 				data: null,
 				message: result.Message,
-				statusCode: 200
+				statusCode: 202
 			));
 		}
 
+		// Returns latest rate for a currency pair — both params required
 		[HttpGet("latest")]
 		public async Task<IActionResult> GetLastestRate([FromQuery] string baseCur, [FromQuery] string quoteCur)
 		{
@@ -74,6 +80,7 @@ namespace backend.Controllers
 			));
 		}
 
+		// Returns rate history over a date range — startDate before endDate
 		[HttpGet("history")]
 		public async Task<IActionResult> GetHistoryRateAsync([FromQuery] string baseCur, [FromQuery] string quoteCur, [FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate)
 		{

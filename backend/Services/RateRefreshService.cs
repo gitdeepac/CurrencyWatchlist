@@ -163,6 +163,7 @@ namespace backend.Services
 			};
 		}
 
+		// Internal result model — decoupled from external API 
 		public class RateRefreshResult
 		{
 			public bool Success { get; set; } = true;

@@ -11,16 +11,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
+	// Manages items within a specific watchlist — nested under /api/watchlists/{watchlistId}/items.
 	[Route("api/watchlists/{watchlistId:int}/items")]
 	[ApiController]
 	public class WatchlistsItemController : ControllerBase
 	{
+		// DB context injected via DI
 		private readonly ApplicationDbContext _context;
 		public WatchlistsItemController(ApplicationDbContext applicationDbContext)
 		{
 			_context = applicationDbContext;
 		}
 
+		// Returns a single items
 		[HttpGet("{Id:int}")]
 		public async Task<IActionResult> GetById([FromRoute] int watchlistId, [FromRoute] int Id)
 		{
@@ -43,10 +46,11 @@ namespace backend.Controllers
 			return Ok(ApiResponse<object?>.Success(watchlistItem.ToWatchlistItemDto(), "Successfully Fetch all WatchlistItems", 200));
 		}
 
+		// Adds a currency pair item to a watchlist
 		[HttpPost]
 		public async Task<IActionResult> Create(
-		  [FromRoute] int watchlistId,
-		  [FromBody] CreateWatchlistItemRequestDto watchlistItemDto)
+				[FromRoute] int watchlistId,
+				[FromBody] CreateWatchlistItemRequestDto watchlistItemDto)
 		{
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);
@@ -56,6 +60,7 @@ namespace backend.Controllers
 			if (!watchlistExists)
 				return NotFound(ApiResponse<object?>.NotFound($"Watchlist with ID {watchlistId} does not exist."));
 
+			// Duplicate check — same pair in same watchlist is not allowed
 			var itemExists = await _context.WatchlistItems
 			  .AnyAsync(x => x.WatchlistId == watchlistId
 						  && x.BaseCurrency == watchlistItemDto.BaseCurrency && x.QuoteCurrency == watchlistItemDto.QuoteCurrency);
@@ -72,6 +77,7 @@ namespace backend.Controllers
 			ApiResponse<object?>.Success(watchlistItem.ToWatchlistItemDto(), "Successfully Created Wathclist Item.", 201));
 		}
 
+		// Hard delete by item ID
 		[HttpDelete]
 		[Route("{Id:int}")]
 		public async Task<IActionResult> Delete([FromRoute] int Id)

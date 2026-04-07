@@ -7,8 +7,10 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace backend.Services
 {
+	// Fetches historical exchange rates from the Frankfurter external API.
 	public class HistoryRateService
 	{
+		// IHttpClientFactory used over HttpClient directly — avoids socket exhaustion
 		private readonly IHttpClientFactory _httpClientFactory;
 		private readonly ILogger<HistoryRateService> _logger;
 
@@ -18,6 +20,7 @@ namespace backend.Services
 			_logger = logger;
 		}
 
+		// Returns rate history for a currency pair over a date range — empty list on any failure, never throws
 		public async Task<List<HistoryRateResult>> GetHistoryRateAsync(string baseCurrency, string quoteCurrency, DateOnly fromDate, DateOnly toDate)
 		{
 			var baseCurr = baseCurrency.Trim().ToUpper();
@@ -69,6 +72,8 @@ namespace backend.Services
 			}
 		}
 	}
+
+	// Internal result model — decoupled from external API 
 	public class HistoryRateResult
 	{
 		public string BaseCurrency { get; set; } = string.Empty;
