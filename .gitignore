@@ -5,6 +5,7 @@
 # Build folders
 bin/
 obj/
+frontend/node_modules/
 
 # SQLite database
 currency_watchlist.db
