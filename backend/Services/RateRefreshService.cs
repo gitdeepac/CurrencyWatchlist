@@ -79,14 +79,12 @@ namespace backend.Services
 				}
 				catch (HttpRequestException ex)
 				{
-					// Network error, timeout, Frankfurter returned non-2xx
-					// Log it so you can see which pair failed and why
 					_logger.LogWarning("Network error for {Base}/{Quote}: {Error}", pair.BaseCurrency, pair.QuoteCurrency, ex.Message);
 					return null;
 				}
 				catch (Exception ex)
 				{
-					// Anything else unexpected — JSON parse error, etc.
+
 					_logger.LogError("Unexpected error for {Base}/{Quote}: {Error}", pair.BaseCurrency, pair.QuoteCurrency, ex.Message);
 					return null;
 				}
@@ -98,7 +96,8 @@ namespace backend.Services
 
 
 			var results = await Task.WhenAll(fetchTasks);
-			// Filter out any nulls (failed pairs)
+
+			// Filter Empty ones.
 			var fetchedRates = results
 				  .Where(r => r != null)
 				  .Cast<RateSnapShotDto>()
@@ -114,9 +113,9 @@ namespace backend.Services
 						r.BaseCurrency == dto.BaseCurrency &&
 						r.QuoteCurrency == dto.QuoteCurrency);
 
-				if (existing == null)
+				if (existing == null) // create case
 				{
-					// No row found — insert
+
 					await _applicationDbContext.RateSnapShot.AddAsync(new RateSnapShot
 					{
 						BaseCurrency = dto.BaseCurrency,
@@ -127,9 +126,8 @@ namespace backend.Services
 					});
 					created++;
 				}
-				else
+				else // update case
 				{
-					// Row found — update
 					existing.Rate = dto.Rate;
 					existing.SourceTimestamp = dto.SourceTimestamp;
 					existing.CreateAt = DateTime.Now;
@@ -145,7 +143,6 @@ namespace backend.Services
 			{
 				_logger.LogError("Database save failed: {Error}", ex.Message);
 
-				// Return a failure result — controller will handle the HTTP response
 				return new RateRefreshResult
 				{
 					Success = false,
@@ -163,7 +160,7 @@ namespace backend.Services
 			};
 		}
 
-		// Internal result model — decoupled from external API 
+		// Internal result model 
 		public class RateRefreshResult
 		{
 			public bool Success { get; set; } = true;
