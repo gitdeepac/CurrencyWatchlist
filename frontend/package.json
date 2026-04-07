@@ -15,7 +15,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "dev": "kill-port 3001 && react-scripts start",
+    "dev": "concurrently \"dotnet watch run --project backend\" \"npm run dev",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -39,6 +39,7 @@
     ]
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "kill-port": "^2.0.1"
   }
 }

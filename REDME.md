@@ -52,3 +52,12 @@ This API provides exchange rate tracking and watchlist management. It integrates
 | GET    | `/api/watchlists/{watchlistId}/items/{id}` | Get a single item to its watchlist      |
 | POST   | `/api/watchlists/{watchlistId}/items`      | Add a currency pair item to a watchlist |
 | DELETE | `/api/watchlists/{watchlistId}/items/{id}` | Delete an item by ID                    |
+
+# FrontEnd
+
+### Install Required Tool
+
+- Got to frontend folder
+- Run : npm install
+- Install concurrently (used to run multiple commands at once):
+  - Command : npm install concurrently --save-dev
