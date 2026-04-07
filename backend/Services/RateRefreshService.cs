@@ -41,7 +41,7 @@ namespace backend.Services
 			.Distinct()
 			.ToListAsync();
 
-			if (!distinctPairs.Any())
+			if (distinctPairs.Count == 0)
 			{
 				_logger.LogInformation("No pairs found in watchlist — nothing to refresh.");
 				return new RateRefreshResult { Message = "Watchlist is empty." };
