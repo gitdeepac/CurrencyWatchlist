@@ -4,10 +4,6 @@
 
 - Follow these steps to set up and run the backend API locally:
 
-1. .NET SDK (7 or later)
-2. SQLite (or DB Browser for SQLite – optional)
-3. IDE (recommended: Visual Studio / VS Code)
-
 - Clone the Repository
 - Configure Database - Default set to currency_watchlist.db
 - Run Database Migration - command dotnet ef database update
