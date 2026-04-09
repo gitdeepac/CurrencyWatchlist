@@ -1,24 +1,40 @@
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
+import { watchlistApi } from "../../services/watchlist/api";
 
-// Watchlist Name
-
-const AddWatchlist = () => {
-  const [formValue, setFormvalue] = useState({
+const CreateWatchlist = () => {
+  const [formValue, setFormValue] = useState({
     watchlistName: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handelChange = (e) => {
     const { name, value } = e.target;
-    setFormvalue({
+    setFormValue({
       ...formValue,
       [name]: value,
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
     console.log("form-value", formValue);
-    setFormvalue({
+
+    // API call
+    try {
+      await watchlistApi.create(formValue);
+      setFormValue({ watchlistName: "" });
+      //navigate("/watchlist");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+    // Form Reset
+    setFormValue({
       watchlistName: "",
     });
   };
@@ -32,6 +48,7 @@ const AddWatchlist = () => {
               <h4 className="m-0">Watchlist - Create</h4>
             </div>
             <div className="card-body">
+              {error && <div className="alert alert-danger">{error}</div>}
               <form action="">
                 <div className="row">
                   <div className="col-12">
@@ -48,9 +65,16 @@ const AddWatchlist = () => {
                 </div>
                 <div className="row mt-4">
                   <div className="col-12 d-flex justify-content-end">
-                    <button className="btn btn-primary" onClick={handleSubmit}>
-                      Create Watchlist
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleSubmit}
+                      disabled={loading || !formValue.watchlistName}
+                    >
+                      {loading ? "Creating..." : "Create Watchlist"}
                     </button>
+                    <NavLink className="btn btn-danger" to="/watchlist">
+                      Cancel
+                    </NavLink>
                   </div>
                 </div>
               </form>
@@ -62,4 +86,4 @@ const AddWatchlist = () => {
   );
 };
 
-export default AddWatchlist;
+export default CreateWatchlist;
