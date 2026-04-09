@@ -3,8 +3,6 @@ import { createBrowserRouter } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
 import ListWatchlist from "../components/watchlist/ListWatchlist";
 import CreateWatchlist from "../components/watchlist/CreateWatchlist";
-import WatchlistItems from "../components/watchlist/ListWatchlist";
-import AlertRules from "../components/watchlist/ListWatchlist";
 
 export const router = createBrowserRouter([
   {
