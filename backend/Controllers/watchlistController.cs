@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using backend.Data;
 using backend.Dtos.Watchlist;
 using backend.Helpers;
+using backend.Interfaces;
 using backend.Mappers;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -20,10 +21,10 @@ namespace backend.Controllers
 	public class WatchlistsController : ControllerBase
 	{
 		// DB context injected via DI
-		private readonly ApplicationDbContext _context;
-		public WatchlistsController(ApplicationDbContext applicationDbContext)
+		private readonly IWatchlistRepository _watchlistRepository;
+		public WatchlistsController(IWatchlistRepository watchlistRepository)
 		{
-			_context = applicationDbContext;
+			_watchlistRepository = watchlistRepository;
 		}
 
 		// Returns all watchlists with items
@@ -33,11 +34,11 @@ namespace backend.Controllers
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);
 
-			var watchlists = await _context.Watchlist.Include(wl => wl.Items).ToListAsync();
+			var watchlists = await _watchlistRepository.GetAllAsync();
 
 			var watchlistDto = watchlists.Select(wl => wl.ToWatchlistDto());
 
-			return Ok(ApiResponse<object?>.Success(
+			return Ok(ApiResponse<object>.Success(
 				data: watchlistDto,
 				message: "Successfully fetch list",
 				statusCode: 200
@@ -46,10 +47,10 @@ namespace backend.Controllers
 
 
 		// Returns a single watchlist by ID — items not included here, intentional
-		[HttpGet("{id:int}")]
-		public async Task<IActionResult> GetById([FromRoute] int id)
+		[HttpGet("{Id:int}")]
+		public async Task<IActionResult> GetById([FromRoute] int Id)
 		{
-			var watchlist = await _context.Watchlist.FindAsync(id);
+			var watchlist = await _watchlistRepository.GetByIdAsync(Id);
 
 			if (watchlist == null)
 			{
@@ -67,8 +68,8 @@ namespace backend.Controllers
 				return BadRequest(ModelState);
 
 			var watchlistModel = watchlistDto.ToWatchlistFromCreateDTO();
-			await _context.Watchlist.AddAsync(watchlistModel);
-			await _context.SaveChangesAsync();
+			await _watchlistRepository.CreateWatchlistAsync(watchlistModel);
+			
 			return CreatedAtAction(nameof(GetById), new { id = watchlistModel.Id },
 				ApiResponse<object?>.Success(watchlistModel.ToWatchlistDto(), "Successfully created watchlist", 201));
 		}
@@ -82,15 +83,12 @@ namespace backend.Controllers
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);
 
-			var watchlistModel = await _context.Watchlist.FirstOrDefaultAsync(x => x.Id == Id);
+			var watchlistModel = await _watchlistRepository.DeleteWatchlistAsync(Id);
 
 			if (watchlistModel == null)
 			{
 				return NotFound(ApiResponse<object?>.NotFound("No record found"));
 			}
-
-			_context.Watchlist.Remove(watchlistModel);
-			await _context.SaveChangesAsync();
 
 			return Ok(ApiResponse<object?>.Success(null, $"Successfully Deleted Watchlist {Id}", 200));
 		}
