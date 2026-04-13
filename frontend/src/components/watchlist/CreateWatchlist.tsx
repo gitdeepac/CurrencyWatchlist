@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { watchlistApi } from "../../services/watchlist/api";
+import { toast, ToastContainer } from "react-toastify";
 
 const CreateWatchlist = () => {
-  const [formValue, setFormValue] = useState({
-    watchlistName: "",
-  });
+  const [formValue, setFormValue] = useState({ name: "" });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
 
   const handelChange = (e) => {
     const { name, value } = e.target;
@@ -20,22 +19,20 @@ const CreateWatchlist = () => {
   const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    console.log("form-value", formValue);
-
+    setError(null);
     // API call
     try {
-      await watchlistApi.create(formValue);
-      setFormValue({ watchlistName: "" });
-      //navigate("/watchlist");
+      var responseWatchlist = await watchlistApi.create(formValue);
+      toast.success(responseWatchlist.message);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Something went wrong");
+      setError(err.response?.data?.title);
     } finally {
       setLoading(false);
     }
+
     // Form Reset
     setFormValue({
-      watchlistName: "",
+      name: "",
     });
   };
 
@@ -48,6 +45,7 @@ const CreateWatchlist = () => {
               <h4 className="m-0">Watchlist - Create</h4>
             </div>
             <div className="card-body">
+              <ToastContainer />
               {error && <div className="alert alert-danger">{error}</div>}
               <form action="">
                 <div className="row">
@@ -55,8 +53,8 @@ const CreateWatchlist = () => {
                     <label htmlFor=" "> Wathclist Name</label>
                     <input
                       type="text"
-                      name="watchlistName"
-                      value={formValue.watchlistName}
+                      name="name"
+                      value={formValue.name}
                       placeholder="Please enter watchlist"
                       className="form-control"
                       onChange={handelChange}
@@ -68,7 +66,7 @@ const CreateWatchlist = () => {
                     <button
                       className="btn btn-primary"
                       onClick={handleSubmit}
-                      disabled={loading || !formValue.watchlistName}
+                      disabled={loading || !formValue.name}
                     >
                       {loading ? "Creating..." : "Create Watchlist"}
                     </button>

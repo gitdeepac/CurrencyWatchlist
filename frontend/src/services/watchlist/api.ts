@@ -1,29 +1,57 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://localhost:5001/api",
+  baseURL: "http://localhost:5109/api",
   headers: { "Content-Type": "application/json" },
 });
 
 export const watchlistApi = {
   getAll: async () => {
-    const res = await api.get("/watchlists");
-    return res.data;
+    try {
+      const res = await api.get("/watchlists");
+      return { success: true, data: res.data.data };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Something went wrong",
+      };
+    }
   },
 
   getById: async (id: number) => {
-    const res = await api.get(`/watchlists/${id}`);
-    return res.data;
+    try {
+      const res = await api.get(`/watchlists/${id}`);
+      return { success: true, data: res.data };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Something went wrong",
+      };
+    }
   },
 
-  create: async (data: { watchlistName: string }) => {
-    const res = await api.post("/watchlists", data);
-    return res.data;
+  create: async (data: { name: string }) => {
+    try {
+      const res = await api.post("/watchlists", data);
+      return { success: true, data: res.data };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Something went wrong",
+      };
+    }
   },
 
   delete: async (id: number) => {
-    const res = await api.delete(`/watchlists/${id}`);
-    return res.data;
+    try {
+      const res = await api.delete(`/watchlists/${id}`);
+      return { success: true, data: res.data };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Something went wrong",
+      };
+    }
   },
 };
 
