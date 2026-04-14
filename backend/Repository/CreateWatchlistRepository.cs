@@ -11,7 +11,7 @@ namespace backend.Repository
 {
 	public class CreateWatchlistRepository : IWatchlistRepository
 	{
-		private readonly ApplicationDbContext _context; 
+		private readonly ApplicationDbContext _context;
 		public CreateWatchlistRepository(ApplicationDbContext context)
 		{
 			_context = context;
@@ -28,12 +28,11 @@ namespace backend.Repository
 		{
 			var watchlistModel = await _context.Watchlist.FirstOrDefaultAsync(x => x.Id == Id);
 
-			// if null the return null ?
-			if(watchlistModel == null)
+			if (watchlistModel == null)
 			{
 				return null;
 			}
-			
+
 			// Remove WatchList
 			_context.Watchlist.Remove(watchlistModel);
 			await _context.SaveChangesAsync();
@@ -42,9 +41,9 @@ namespace backend.Repository
 
 		public Task<List<Watchlist>> GetAllAsync()
 		{
-			
+
 			return _context.Watchlist.Include(wl => wl.Items).ToListAsync();
-			
+
 		}
 
 		public async Task<Watchlist?> GetByIdAsync(int Id)

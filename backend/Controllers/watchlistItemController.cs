@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using backend.Data;
 using backend.Dtos.WatchlistItem;
 using backend.Helpers;
+using backend.Interfaces;
 using backend.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,13 +17,14 @@ namespace backend.Controllers
 	[ApiController]
 	public class WatchlistsItemController : ControllerBase
 	{
-		// DB context injected via DI
-		private readonly ApplicationDbContext _context;
-		public WatchlistsItemController(ApplicationDbContext applicationDbContext)
-		{
-			_context = applicationDbContext;
-		}
 
+		private readonly IWatchlistItemRepository _watchlistItemRepository;
+		private readonly IWatchlistRepository _watchlistRepository;
+		public WatchlistsItemController(IWatchlistItemRepository watchlistItemRepository, IWatchlistRepository watchlistRepository)
+		{
+			_watchlistItemRepository = watchlistItemRepository;
+			_watchlistRepository = watchlistRepository;
+		}
 		// Returns a single items
 		[HttpGet("{Id:int}")]
 		public async Task<IActionResult> GetById([FromRoute] int watchlistId, [FromRoute] int Id)
@@ -30,15 +32,16 @@ namespace backend.Controllers
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);
 
-			var watchlistExists = await _context.Watchlist.AnyAsync(w => w.Id == watchlistId);
+			//var watchlistExists = await _context.Watchlist.AnyAsync(w => w.Id == watchlistId);
+			var watchlistExist = await _watchlistRepository.GetByIdAsync(watchlistId);
 
-			if (!watchlistExists)
+
+			if (watchlistExist == null)
 			{
 				return NotFound(ApiResponse<object?>.NotFound($"Watchlist with ID {watchlistId} does not exist."));
 			}
 
-			var watchlistItem = await _context.WatchlistItems
-					  .FirstOrDefaultAsync(i => i.Id == Id && i.WatchlistId == watchlistId);
+			var watchlistItem = await _watchlistItemRepository.GetByIdAsync(Id, watchlistId);
 
 			if (watchlistItem == null)
 				return NotFound(ApiResponse<object?>.NotFound($"Item with ID {Id} was not found in watchlist {watchlistId}"));
@@ -56,14 +59,12 @@ namespace backend.Controllers
 				return BadRequest(ModelState);
 
 
-			var watchlistExists = await _context.Watchlist.AnyAsync(w => w.Id == watchlistId);
-			if (!watchlistExists)
+			var watchlistExist = await _watchlistRepository.GetByIdAsync(watchlistId);
+			if (watchlistExist == null)
 				return NotFound(ApiResponse<object?>.NotFound($"Watchlist with ID {watchlistId} does not exist."));
 
 			// Duplicate check — same pair in same watchlist is not allowed
-			var itemExists = await _context.WatchlistItems
-			  .AnyAsync(x => x.WatchlistId == watchlistId
-						  && x.BaseCurrency == watchlistItemDto.BaseCurrency && x.QuoteCurrency == watchlistItemDto.QuoteCurrency);
+			var itemExists = await _watchlistItemRepository.ExistsAsync(watchlistId, watchlistItemDto.BaseCurrency, watchlistItemDto.QuoteCurrency);
 
 			if (itemExists)
 				return Ok(ApiResponse<object?>.Error(null, "This item already exists in the watchlist.", 200));
@@ -71,8 +72,8 @@ namespace backend.Controllers
 
 			var watchlistItem = watchlistItemDto.ToWatchlistItemFromCreateDTO(watchlistId);
 
-			await _context.WatchlistItems.AddAsync(watchlistItem);
-			await _context.SaveChangesAsync();
+			await _watchlistItemRepository.CreateWatchlistAsync(watchlistItem);
+
 			return CreatedAtAction(nameof(GetById), new { watchlistId, id = watchlistItem.Id },
 			ApiResponse<object?>.Success(watchlistItem.ToWatchlistItemDto(), "Successfully Created Wathclist Item.", 201));
 		}
@@ -80,20 +81,23 @@ namespace backend.Controllers
 		// Hard delete by item ID
 		[HttpDelete]
 		[Route("{Id:int}")]
-		public async Task<IActionResult> Delete([FromRoute] int Id)
+		public async Task<IActionResult> Delete([FromRoute] int watchlistId, [FromRoute] int Id)
 		{
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);
 
-			var watchlistItemModel = await _context.WatchlistItems.FirstOrDefaultAsync(x => x.Id == Id);
+			// 
+			var watchlistExists = await _watchlistRepository.GetByIdAsync(watchlistId);
+			if (watchlistExists == null)
+				return NotFound(ApiResponse<object?>.NotFound($"Watchlist with ID {watchlistId} does not exist."));
 
-			if (watchlistItemModel == null)
+
+			var deletedItem = await _watchlistItemRepository.DeleteWatchlistAsync(Id);
+
+			if (deletedItem == null)
 			{
 				return NotFound(ApiResponse<object?>.NotFound($"Watchlist Item with ID {Id} does not exist."));
 			}
-
-			_context.WatchlistItems.Remove(watchlistItemModel);
-			await _context.SaveChangesAsync();
 
 			return Ok(ApiResponse<object?>.Success(null, $"Successfully Deleted Watchlist Item with ID {Id}", 200));
 		}
