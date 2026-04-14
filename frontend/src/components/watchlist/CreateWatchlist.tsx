@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { watchlistApi } from "../../services/watchlist/api";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
+
 
 const CreateWatchlist = () => {
   const [formValue, setFormValue] = useState({ name: "" });
@@ -45,7 +46,6 @@ const CreateWatchlist = () => {
               <h4 className="m-0">Watchlist - Create</h4>
             </div>
             <div className="card-body">
-              <ToastContainer />
               {error && <div className="alert alert-danger">{error}</div>}
               <form action="">
                 <div className="row">

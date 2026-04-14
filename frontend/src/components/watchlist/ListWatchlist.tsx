@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { watchlistApi } from "../../services/watchlist/api";
-import { toast, ToastContainer, type Id } from "react-toastify";
+import { toast } from "react-toastify";
+
+interface WatchlistItem {
+  id: number;
+  name: string;
+}
 
 const ListWatchlist = () => {
-  const [watchlist, setWatchList] = useState([]); // Start with an empty list
-  const [isLoading, setIsLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
+  const [watchlist, setWatchList] = useState<WatchlistItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const getWatchlist = async () => {
     try {
@@ -14,16 +20,12 @@ const ListWatchlist = () => {
       setError(null);
       const watchListData = await watchlistApi.getAll();
       if (watchListData.success) {
-        console.log(watchListData.data);
         setWatchList(watchListData.data || []); // Fallback to empty array if response is null
-        setIsLoading(false);
       } else {
         setError(watchListData.message);
-        setIsLoading(false);
       }
     } catch (err) {
       setError("Failed to load watchlist. Please try again.");
-      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }
@@ -34,27 +36,24 @@ const ListWatchlist = () => {
   }, []);
 
   const handleDelete = async (watchlistId: number) => {
-    setIsLoading(true);
+    setIsDeleting(watchlistId);
     setError(null);
-    const prev = watchlist;
-    
 
     // API call
     try {
-      var deleteWatchListResp = await watchlistApi.delete(watchlistId);
-      
+      const deleteWatchListResp = await watchlistApi.delete(watchlistId);
+
       if (!deleteWatchListResp.success) {
-        setWatchList(prev);
         toast.error(deleteWatchListResp.message);
-		return;
+        return;
       }
-	  setWatchList((list) => list.filter((w) => w.id !== watchlistId));
-	  toast.success(deleteWatchListResp.data.message);
+      setWatchList((list) => list.filter((w) => w.id !== watchlistId));
+      toast.success(deleteWatchListResp.data.message);
     } catch (err: any) {
       setError(err.response?.data?.message);
       toast.error(err.response?.data?.message);
     } finally {
-      setIsLoading(false);
+      setIsDeleting(null);
     }
   };
   return (
@@ -69,32 +68,52 @@ const ListWatchlist = () => {
               </NavLink>
             </div>
             <div className="card-body">
-              <ToastContainer />
-              <table className="table table-striped">
-                <thead>
-                  <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Watchlist Name</th>
-                    <th scope="col">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {watchlist.map((item, index) => (
-                    <tr key={index}>
-                      <th scope="row">{index + 1}</th>
-                      <td>{item.name}</td>
-                      <td>
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          Delete
-                        </button>
-                      </td>
+              {error && (
+                <div className="alert alert-danger" role="alert">
+                  {error}
+                </div>
+              )}
+
+              {isLoading ? (
+                <p className="text-muted">Loading...</p>
+              ) : (
+                <table className="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">#</th>
+                      <th scope="col">Watchlist Name</th>
+                      <th scope="col">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {watchlist.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="text-center text-muted">
+                          No watchlists found.
+                        </td>
+                      </tr>
+                    ) : (
+                      watchlist.map((item, index) => (
+                        <tr key={item.id}>
+                          <th scope="row">{index + 1}</th>
+                          <td>{item.name}</td>
+                          <td>
+                            <button
+                              className="btn btn-danger"
+                              onClick={() => handleDelete(item.id)}
+                              disabled={isDeleting === item.id}
+                            >
+                              {isDeleting === item.id
+                                ? "Deleting..."
+                                : "Delete"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>
