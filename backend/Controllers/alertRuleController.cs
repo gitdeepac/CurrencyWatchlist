@@ -6,8 +6,11 @@ using backend.Data;
 using backend.Dtos.Rate;
 using backend.Helpers;
 using backend.Mappers;
+using backend.Models;
+using backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace backend.Controllers
 {
@@ -20,9 +23,13 @@ namespace backend.Controllers
 
 		// Injected via DI
 		public readonly ApplicationDbContext _context;
-		public AlertRuleController(ApplicationDbContext context)
+		private readonly RateRefreshService _rateRefreshService;
+		private readonly ILogger<AlertRuleController> _logger;
+		public AlertRuleController(ApplicationDbContext context, RateRefreshService rateRefreshService, ILogger<AlertRuleController> logger)
 		{
 			_context = context;
+			_rateRefreshService = rateRefreshService;
+			_logger = logger;
 		}
 
 		// Returns all records
@@ -92,6 +99,88 @@ namespace backend.Controllers
 			await _context.SaveChangesAsync();
 
 			return Ok(ApiResponse<object?>.Success(null, $"Successfully Deleted Alert {Id}", 200));
+		}
+
+		[HttpPost("{id:int}/evaluate")]
+		public async Task<IActionResult> EvaluateAlert([FromRoute] int id)
+		{
+
+			// STEPS
+			// 1. Check the alert is avaliable into database
+			// 2. Update the rate through service into database
+			// 3. Get the watchlist from Alert
+			// 4. Check the condition matched
+			// 5. If matched then create alert event.
+
+			if (!ModelState.IsValid)
+				return BadRequest(ModelState);
+
+			var alertRule = await _context.AlertRule.FindAsync(id);
+			if (alertRule == null)
+			{
+				return NotFound(ApiResponse<object?>.NotFound("Alert rule not found"));
+			}
+			_logger.LogWarning("Wathlist Id: {watchlistId}", alertRule.WatchlistItemId);
+			var refreshResult = await _rateRefreshService.RefreshRateAsync(); // 
+			if (!refreshResult.Success)
+			{
+				return StatusCode(500, ApiResponse<object?>.ServerError(
+					$"Failed to refresh rate: {refreshResult.Message}"));
+			}
+			var rateSnapShot = await _context.WatchlistItems
+				.Where(x => x.Id == alertRule.WatchlistItemId)
+				.Join(
+					_context.RateSnapShot,
+					watchlistItem => watchlistItem.QuoteCurrency,
+					rateSnapshot => rateSnapshot.QuoteCurrency,
+					(watchlistItem, rateSnapshot) => rateSnapshot
+				)
+				.FirstOrDefaultAsync();
+			if (rateSnapShot == null)
+			{
+				return NotFound("Rate snapshot not found.");
+			}
+			// now check condition
+			decimal thresholdValue = decimal.Parse(alertRule.Threshold);
+			decimal rateValue = rateSnapShot.Rate;
+			var result = alertRule.Condition.Trim() switch
+			{
+				">" => rateValue > thresholdValue,
+				"<" => rateValue < thresholdValue,
+				">=" => rateValue >= thresholdValue,
+				"<=" => rateValue <= thresholdValue,
+				"==" => rateValue == thresholdValue,
+				"!=" => rateValue != thresholdValue,
+				_ => false
+			};
+
+			if (result)
+			{
+				var alertEvent = new AlertEvent
+				{
+					AlertRuleId = alertRule.Id,
+					Rate = rateValue.ToString(),
+					TriggerAt = DateTime.UtcNow
+				};
+
+				_context.AlertEvent.Add(alertEvent);
+				await _context.SaveChangesAsync();
+			}
+
+			return Ok(
+				ApiResponse<object?>.Success(
+					new
+					{
+						AlertRuleId = alertRule.Id,
+						CurrentRate = rateValue,
+						Threshold = thresholdValue,
+						Condition = alertRule.Condition,
+						Triggered = result
+					},
+					result ? "Alert triggered successfully." : "Alert evaluated successfully.",
+					200
+				)
+			);
 		}
 	}
 }
