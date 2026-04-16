@@ -45,14 +45,18 @@ const RateListService = () => {
     }
   };
 
-  const handelChange = (e) => {
+  const handelChangeLatest = (e) => {
     const { name, value } = e.target;
     setFormValue({
       ...formValue,
       [name]: value,
     });
 
-    setFormValueHistorical({
+   
+  };
+  const handelChangeHistory = (e) => {
+    const { name, value } = e.target;
+     setFormValueHistorical({
       ...formValueHistorical,
       [name]: value,
     });
@@ -60,13 +64,22 @@ const RateListService = () => {
 
   const handleRefreshRatesWithInputLatest = async () => {
     try {
+      if (formValue.baseCurrency.toUpperCase().length <= 0) {
+        toast.error("Please enter base currency");
+        return;
+      }
+
+      if (formValue.quoteCurrency.toUpperCase().length <= 0) {
+        toast.error("Please enter quote currency");
+        return;
+      }
       setIsLoading(true);
       const refreshRateService = await rateApi.refreshRateWithInput(
         formValue.baseCurrency.toUpperCase(),
         formValue.quoteCurrency.toUpperCase(),
       );
 
-      console.log(refreshRateService.data.data);
+      //console.log(refreshRateService.data.data);
       var item = refreshRateService.data.data;
       const fetchlist = [
         {
@@ -78,7 +91,12 @@ const RateListService = () => {
       ];
 
       setRateList(fetchlist);
-
+      setFormValue({
+        baseCurrency: "",
+        quoteCurrency: "",
+        rate: "",
+        rateDate: "",
+      });
       toast.success(refreshRateService.data.message);
     } catch (error) {
       toast.error("Error refreshing rates:", error);
@@ -88,6 +106,25 @@ const RateListService = () => {
   };
 
   const handleRefreshRatesWithInputHistorical = async () => {
+    if (formValueHistorical.baseCurrency.toUpperCase().length <= 0) {
+      toast.error("Please enter base currency");
+      return;
+    }
+
+    if (formValueHistorical.quoteCurrency.toUpperCase().length <= 0) {
+      toast.error("Please enter quote currency");
+      return;
+    }
+
+    if (formValueHistorical.startDate.length <= 0) {
+      toast.error("Please enter quote currency");
+      return;
+    }
+    if (formValueHistorical.endDate.length <= 0) {
+      toast.error("Please enter quote currency");
+      return;
+    }
+
     try {
       setIsLoading(true);
       const refreshRateService = await rateApi.refreshRateWithInputHistorical(
@@ -125,50 +162,48 @@ const RateListService = () => {
               <h4 className="m-0">Fetch Latest Rate</h4>
             </div>
             <div className="card-body">
-              <form action="">
-                <div className="row">
-                  <div className="col-4">
-                    <label htmlFor=" ">
-                      Base Currency <small>(Max 3 Letters)</small>
-                    </label>
-                    <input
-                      type="text"
-                      name="baseCurrency"
-                      value={formValue.baseCurrency}
-                      placeholder="Please enter base currency Ex: AUD"
-                      className="form-control"
-                      onChange={handelChange}
-                      maxLength={3}
-                    />
-                  </div>
-                  <div className="col-4">
-                    <label htmlFor=" ">
-                      {" "}
-                      Quote Currency <small>(Max 3 Letters)</small>
-                    </label>
-                    <input
-                      type="text"
-                      name="quoteCurrency"
-                      value={formValue.quoteCurrency}
-                      placeholder="Please enter quote currency Ex: AUD"
-                      className="form-control"
-                      onChange={handelChange}
-                      maxLength={3}
-                    />
-                  </div>
+              <div className="row">
+                <div className="col-6">
+                  <label htmlFor=" ">
+                    Base Currency <small>(Max 3 Letters)</small>
+                  </label>
+                  <input
+                    type="text"
+                    name="baseCurrency"
+                    value={formValue.baseCurrency}
+                    placeholder="Please enter base currency Ex: AUD"
+                    className="form-control"
+                    onChange={handelChangeLatest}
+                    maxLength={3}
+                  />
                 </div>
-                <div className="row mt-4">
-                  <div className="col-12 d-flex justify-content-end d-flex gap-2">
-                    <button
-                      className="btn btn-primary"
-                      onClick={handleRefreshRatesWithInputLatest}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Fetching..." : "Fetch Latest Rate "}
-                    </button>
-                  </div>
+                <div className="col-6">
+                  <label htmlFor=" ">
+                    {" "}
+                    Quote Currency <small>(Max 3 Letters)</small>
+                  </label>
+                  <input
+                    type="text"
+                    name="quoteCurrency"
+                    value={formValue.quoteCurrency}
+                    placeholder="Please enter quote currency Ex: AUD"
+                    className="form-control"
+                    onChange={handelChangeLatest}
+                    maxLength={3}
+                  />
                 </div>
-              </form>
+              </div>
+              <div className="row mt-4">
+                <div className="col-12 d-flex justify-content-end d-flex gap-2">
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleRefreshRatesWithInputLatest}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Fetching..." : "Fetch Latest Rate "}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -190,7 +225,7 @@ const RateListService = () => {
                       value={formValueHistorical.baseCurrency}
                       placeholder="Please enter base currency Ex: AUD"
                       className="form-control"
-                      onChange={handelChange}
+                      onChange={handelChangeHistory}
                       maxLength={3}
                     />
                   </div>
@@ -204,11 +239,11 @@ const RateListService = () => {
                       value={formValueHistorical.quoteCurrency}
                       placeholder="Start Date (yyyy-mm-dd)"
                       className="form-control"
-                      onChange={handelChange}
+                      onChange={handelChangeHistory}
                       maxLength={3}
                     />
                   </div>
-				  <div className="col-6">
+                  <div className="col-6">
                     <label htmlFor=" ">
                       Start Date <small>YYYY-mm-dd</small>
                     </label>
@@ -216,12 +251,12 @@ const RateListService = () => {
                       type="text"
                       name="startDate"
                       value={formValueHistorical.startDate}
-                      placeholder="End Date (yyyy-mm-dd)"
+                      placeholder="Start Date (yyyy-mm-dd)"
                       className="form-control"
-                      onChange={handelChange}
+                      onChange={handelChangeHistory}
                     />
                   </div>
-				  <div className="col-6">
+                  <div className="col-6">
                     <label htmlFor=" ">
                       End Date <small>YYYY-mm-dd</small>
                     </label>
@@ -229,20 +264,20 @@ const RateListService = () => {
                       type="text"
                       name="endDate"
                       value={formValueHistorical.endDate}
-                      placeholder="Please enter quote currency Ex: AUD"
+                      placeholder="End Date (yyyy-mm-dd)"
                       className="form-control"
-                      onChange={handelChange}
+                      onChange={handelChangeHistory}
                     />
                   </div>
                 </div>
                 <div className="row mt-4">
                   <div className="col-12 d-flex justify-content-end d-flex gap-2">
                     <button
-                      className="btn btn-primary"
+                      className="btn btn-warning"
                       onClick={handleRefreshRatesWithInputHistorical}
                       disabled={isLoading}
                     >
-                      {isLoading ? "Fetching..." : "Fetch Latest Rate "}
+                      {isLoading ? "Fetching..." : "Fetch Historical Rate "}
                     </button>
                   </div>
                 </div>
@@ -253,7 +288,7 @@ const RateListService = () => {
         <div className="col-12 px-4">
           <div className="card">
             <div className="card-header d-flex justify-content-between">
-              <h4 className="m-0">Watchlist - Listing</h4>
+              <h4 className="m-0">Rate - Listing</h4>
               <div className="d-flex gap-2">
                 <button
                   className="btn btn-danger"
@@ -275,14 +310,14 @@ const RateListService = () => {
                       <th scope="col">Base Currency</th>
                       <th scope="col">Quote Currency</th>
                       <th scope="col">Rate</th>
-					  <th scope="col">Rate Date</th>
+                      <th scope="col">Rate Date</th>
                     </tr>
                   </thead>
                   <tbody>
                     {ratelist.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="text-center text-muted">
-                          No watchlists found.
+                        <td colSpan={5} className="text-center text-muted">
+                          No Rate list found.
                         </td>
                       </tr>
                     ) : (
@@ -292,7 +327,7 @@ const RateListService = () => {
                           <td>{item.baseCurrency}</td>
                           <td>{item.quoteCurrency}</td>
                           <td>{item.rate}</td>
-						  <td>{item.rateDate}</td>
+                          <td>{item.rateDate}</td>
                         </tr>
                       ))
                     )}

@@ -78,7 +78,8 @@ const ListWatchlistItem = () => {
               <div className="d-flex gap-2">
                 <NavLink
                   to={`/watchlistItems/${selectedId}/add`}
-                  className="btn btn-primary" aria-disabled={(watchlistItemList.length === 0 ? true : false)}
+                  className="btn btn-primary"
+                  aria-disabled={watchlistItemList.length === 0 ? true : false}
                 >
                   Create WatchlistItems
                 </NavLink>
@@ -121,7 +122,16 @@ const ListWatchlistItem = () => {
                           <td>{item.id}</td>
                           <td>{item.baseCurrency}</td>
                           <td>{item.quoteCurrency}</td>
-                          <td>
+                          <td className="d-flex gap-2">
+                            <NavLink
+                              to={`/alertService/${selectedId}`}
+                              className="btn btn-warning"
+                              aria-disabled={
+                                watchlistItemList.length === 0 ? true : false
+                              }
+                            >
+                              View Alert Detail
+                            </NavLink>
                             <button
                               className="btn btn-danger"
                               onClick={() => handleDelete(item.id)}

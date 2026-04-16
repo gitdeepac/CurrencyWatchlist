@@ -43,6 +43,16 @@ const Navbar = () => {
                       Rate Service
                     </NavLink>
                   </li>
+				  {/* <li className="nav-item">
+                    <NavLink
+                      className={({ isActive }) =>
+                        isActive ? "nav-link active" : "nav-link"
+                      }
+                      to="/alertService"
+                    >
+                      Alert Service
+                    </NavLink>
+                  </li> */}
                 </ul>
               </div>
             </nav>
