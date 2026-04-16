@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { NavLink, useParams } from "react-router-dom";
-import { watchlistApi } from "../../services/watchlist/api";
 import { toast } from "react-toastify";
 import { watchlistItemApi } from "../../services/watchlistItem/api";
 
