@@ -39,10 +39,10 @@ namespace backend.Repository
 			return watchlistModel;
 		}
 
-		public Task<List<Watchlist>> GetAllAsync()
+		public async Task<List<Watchlist>> GetAllAsync()
 		{
 
-			return _context.Watchlist.Include(wl => wl.Items).ToListAsync();
+			return await _context.Watchlist.Include(wl => wl.Items).ToListAsync();
 
 		}
 

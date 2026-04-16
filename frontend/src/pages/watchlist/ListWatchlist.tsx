@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { watchlistApi } from "../../services/watchlist/api";
 import { toast } from "react-toastify";
 
-interface WatchlistItem {
+interface Watchlist {
   id: number;
   name: string;
 }
 
 const ListWatchlist = () => {
-  const [watchlist, setWatchList] = useState<WatchlistItem[]>([]);
+  const [watchlist, setWatchList] = useState<Watchlist[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+
+  
   const getWatchlist = async () => {
     try {
       setIsLoading(true);
@@ -29,6 +32,10 @@ const ListWatchlist = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleViewDetail = (item) => {
+	navigate(`/watchlistItems`, { state: { id: item.id } });
   };
 
   useEffect(() => {
@@ -97,8 +104,14 @@ const ListWatchlist = () => {
                         <tr key={item.id}>
                           <th scope="row">{index + 1}</th>
                           <td>{item.name}</td>
-                          <td>
+                          <td className="d-flex gap-2">
                             <button
+                              className="btn btn-warning"
+                              onClick={() => handleViewDetail(item)}
+                            >
+                              View Detail
+                            </button>
+							<button
                               className="btn btn-danger"
                               onClick={() => handleDelete(item.id)}
                               disabled={isDeleting === item.id}

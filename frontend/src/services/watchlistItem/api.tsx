@@ -5,11 +5,12 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-export const watchlistApi = {
-  getAll: async () => {
+export const watchlistItemApi = {
+  
+  getByWatchlistIdAll: async (watchlistId: number) => {
     try {
-      const res = await api.get("/watchlists");
-      return { success: true, data: res.data.data };
+      const res = await api.get(`/Watchlists/${watchlistId}/items`);
+      return { success: true, data: res.data };
     } catch (error: any) {
       return {
         success: false,
@@ -17,10 +18,9 @@ export const watchlistApi = {
       };
     }
   },
-
-  getById: async (id: number) => {
+  getByWatchlistItemWithItemId: async (watchlistId: number, wcItemId: number) => {
     try {
-      const res = await api.get(`/watchlists/${id}`);
+      const res = await api.get(`/watchlistsItems/${watchlistId}/items/${wcItemId}`);
       return { success: true, data: res.data };
     } catch (error: any) {
       return {
@@ -30,9 +30,9 @@ export const watchlistApi = {
     }
   },
 
-  create: async (data: { name: string }) => {
+  create: async (watchlistId: number, data: { watchlistId: number, baseCurrency: string, quoteCurrency: string }) => {
     try {
-      const res = await api.post("/watchlists", data);
+      const res = await api.post(`/Watchlists/${watchlistId}/items`, data);
       return { success: true, data: res.data };
     } catch (error: any) {
       return {
@@ -42,9 +42,9 @@ export const watchlistApi = {
     }
   },
 
-  delete: async (id: number) => {
+  delete: async (watchlistId: number, wcItemId: number) => {
     try {
-      const res = await api.delete(`/watchlists/${id}`);
+      const res = await api.delete(`/Watchlists/${watchlistId}/items/${wcItemId}`);
       return { success: true, data: res.data };
     } catch (error: any) {
       return {

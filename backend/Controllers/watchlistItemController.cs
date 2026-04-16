@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 namespace backend.Controllers
 {
 	// Manages items within a specific watchlist — nested under /api/watchlists/{watchlistId}/items.
-	[Route("api/watchlists/{watchlistId:int}/items")]
+	[Route("api/Watchlists/{watchlistId:int}/items")]
 	[ApiController]
 	public class WatchlistsItemController : ControllerBase
 	{
@@ -25,6 +25,33 @@ namespace backend.Controllers
 			_watchlistItemRepository = watchlistItemRepository;
 			_watchlistRepository = watchlistRepository;
 		}
+
+		[HttpGet]
+		public async Task<IActionResult> GetAll([FromRoute] int watchlistId)
+		{
+			if (!ModelState.IsValid)
+				return BadRequest(ModelState);
+
+			//var watchlistExists = await _context.Watchlist.AnyAsync(w => w.Id == watchlistId);
+			var watchlistExist = await _watchlistRepository.GetByIdAsync(watchlistId);
+
+
+			if (watchlistExist == null)
+			{
+				return NotFound(ApiResponse<object?>.NotFound($"Watchlist with ID {watchlistId} does not exist."));
+			}
+
+			var watchlistItem = await _watchlistItemRepository.GetAllAsync(watchlistId);
+
+			var watchlistDto = watchlistItem.Select(wl => wl.ToWatchlistItemDto());
+
+			if (watchlistItem == null)
+				return NotFound(ApiResponse<object?>.NotFound($"Item was not found in watchlist {watchlistId}"));
+
+			return Ok(ApiResponse<object?>.Success(watchlistDto, "Successfully Fetch all WatchlistItems", 200));
+		}
+
+
 		// Returns a single items
 		[HttpGet("{Id:int}")]
 		public async Task<IActionResult> GetById([FromRoute] int watchlistId, [FromRoute] int Id)

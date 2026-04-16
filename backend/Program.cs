@@ -19,6 +19,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 builder.Services.AddScoped<IWatchlistRepository, CreateWatchlistRepository>();
+builder.Services.AddScoped<IWatchlistItemRepository, CreateWatchlistItemRepository>();
 builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<RateRefreshService>();

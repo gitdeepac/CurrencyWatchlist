@@ -50,5 +50,12 @@ namespace backend.Repository
 							&& x.BaseCurrency == baseCurrency
 							&& x.QuoteCurrency == quoteCurrency);
 		}
+
+		public async Task<List<WatchlistItems>> GetAllAsync(int watchlistId)
+		{
+			return await _context.WatchlistItems
+						.Where(x => x.WatchlistId == watchlistId)
+						.ToListAsync();
+		}
 	}
 }

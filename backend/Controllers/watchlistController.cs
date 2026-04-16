@@ -39,9 +39,9 @@ namespace backend.Controllers
 			var watchlistDto = watchlists.Select(wl => wl.ToWatchlistDto());
 
 			return Ok(ApiResponse<object>.Success(
-				data: watchlistDto,
-				message: "Successfully fetch list",
-				statusCode: 200
+				watchlistDto,
+				"Successfully fetch list",
+				200
 			));
 		}
 

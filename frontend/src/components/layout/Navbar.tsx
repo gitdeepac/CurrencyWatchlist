@@ -38,16 +38,6 @@ const Navbar = () => {
                       className={({ isActive }) =>
                         isActive ? "nav-link active" : "nav-link"
                       }
-                      to="/watchlist-items"
-                    >
-                      Watchlist Items
-                    </NavLink>
-                  </li>
-                  <li className="nav-item">
-                    <NavLink
-                      className={({ isActive }) =>
-                        isActive ? "nav-link active" : "nav-link"
-                      }
                       to="/alert-rules"
                     >
                       Alert Rules

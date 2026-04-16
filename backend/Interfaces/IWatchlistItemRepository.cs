@@ -6,13 +6,15 @@ using backend.Models;
 
 namespace backend.Interfaces
 {
-    public interface IWatchlistItemRepository
-    {
+	public interface IWatchlistItemRepository
+	{
 		Task<WatchlistItems?> GetByIdAsync(int id, int watchlistId); // First or default and can be null so used ?
+
+		Task<List<WatchlistItems>> GetAllAsync(int watchlistId);
 		Task<WatchlistItems> CreateWatchlistAsync(WatchlistItems watchlistModel);
 
 		Task<WatchlistItems?> DeleteWatchlistAsync(int id);
 
 		Task<bool> ExistsAsync(int watchlistId, string baseCurrency, string quoteCurrency);
-    }
+	}
 }
