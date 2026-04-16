@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { rateApi } from "../../services/rate/api";
 import { toast } from "react-toastify";
 
