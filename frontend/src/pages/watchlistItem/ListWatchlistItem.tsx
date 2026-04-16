@@ -78,7 +78,7 @@ const ListWatchlistItem = () => {
               <div className="d-flex gap-2">
                 <NavLink
                   to={`/watchlistItems/${selectedId}/add`}
-                  className="btn btn-primary"
+                  className="btn btn-primary" aria-disabled={(watchlistItemList.length === 0 ? true : false)}
                 >
                   Create WatchlistItems
                 </NavLink>

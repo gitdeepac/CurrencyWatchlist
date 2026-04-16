@@ -33,16 +33,16 @@ const Navbar = () => {
                       Watchlist
                     </NavLink>
                   </li>
-                  {/* <li className="nav-item">
+                  <li className="nav-item">
                     <NavLink
                       className={({ isActive }) =>
                         isActive ? "nav-link active" : "nav-link"
                       }
-                      to="/alert-rules"
+                      to="/rateService"
                     >
-                      Alert Rules
+                      Rate Service
                     </NavLink>
-                  </li> */}
+                  </li>
                 </ul>
               </div>
             </nav>

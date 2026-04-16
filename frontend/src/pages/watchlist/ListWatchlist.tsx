@@ -16,7 +16,6 @@ const ListWatchlist = () => {
 
   const navigate = useNavigate();
 
-  
   const getWatchlist = async () => {
     try {
       setIsLoading(true);
@@ -35,7 +34,7 @@ const ListWatchlist = () => {
   };
 
   const handleViewDetail = (item) => {
-	navigate(`/watchlistItems`, { state: { id: item.id } });
+    navigate(`/watchlistItems`, { state: { id: item.id } });
   };
 
   useEffect(() => {
@@ -63,6 +62,8 @@ const ListWatchlist = () => {
       setIsDeleting(null);
     }
   };
+
+  
   return (
     <div className="container-fluid">
       <div className="row mt-4">
@@ -70,9 +71,11 @@ const ListWatchlist = () => {
           <div className="card">
             <div className="card-header d-flex justify-content-between">
               <h4 className="m-0">Watchlist - Listing</h4>
-              <NavLink to="/watchlist/add" className="btn btn-primary">
-                Create Watchlist
-              </NavLink>
+              <div className="d-flex gap-2">
+                <NavLink to="/watchlist/add" className="btn btn-primary">
+                  Create Watchlist
+                </NavLink>
+              </div>
             </div>
             <div className="card-body">
               {error && (
@@ -111,7 +114,7 @@ const ListWatchlist = () => {
                             >
                               View Detail
                             </button>
-							<button
+                            <button
                               className="btn btn-danger"
                               onClick={() => handleDelete(item.id)}
                               disabled={isDeleting === item.id}
