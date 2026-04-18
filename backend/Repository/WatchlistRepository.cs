@@ -9,10 +9,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Repository
 {
-	public class CreateWatchlistRepository : IWatchlistRepository
+	public class WatchlistRepository : IWatchlistRepository
 	{
 		private readonly ApplicationDbContext _context;
-		public CreateWatchlistRepository(ApplicationDbContext context)
+		public WatchlistRepository(ApplicationDbContext context)
 		{
 			_context = context;
 		}

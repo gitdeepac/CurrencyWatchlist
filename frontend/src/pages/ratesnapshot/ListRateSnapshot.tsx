@@ -9,7 +9,7 @@ interface Watchlist {
   name: string;
 }
 
-const ListWatchlist = () => {
+const ListRateSnapshot = () => {
   const [watchlist, setWatchList] = useState<Watchlist[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
@@ -95,11 +95,11 @@ const ListWatchlist = () => {
                   Create Watchlist
                 </NavLink>
                 <button
-                  className="btn btn-success"
+                  className="btn btn-danger"
                   onClick={handleRefreshRates}
                   disabled={isLoading}
                 >
-                  {isLoading ? "Refresh Rates Snaps..." : "$ Refresh Rates Snapshot"}
+                  {isLoading ? "Refreshing..." : "$ Refresh Rates Snapshot"}
                 </button>
               </div>
             </div>
@@ -164,4 +164,4 @@ const ListWatchlist = () => {
   );
 };
 
-export default ListWatchlist;
+export default ListRateSnapshot;

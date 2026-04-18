@@ -98,7 +98,7 @@ const CreateWatchlistItems = () => {
                     >
                       {loading ? "Creating..." : "Create WatchlistItems"}
                     </button>
-                    <NavLink className="btn btn-danger" to="/watchlist">
+                    <NavLink className="btn btn-danger" to={`/watchlistItems/${watchlistId}`}>
                       Cancel
                     </NavLink>
                   </div>

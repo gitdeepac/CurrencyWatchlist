@@ -115,7 +115,12 @@ namespace backend.Controllers
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);
 
-			var alertRule = await _context.AlertRule.Where(x => x.WatchlistItemId == id).ToListAsync();
+			var alertRule = await _context.AlertRule.Where(x => x.Id == id).FirstOrDefaultAsync();
+			if (alertRule == null)
+			{
+				return StatusCode(404, ApiResponse<object?>.ServerError(
+					$"Failed to fetch the alertrule for : {id}"));
+			}
 
 			var refreshResult = await _rateRefreshService.RefreshRateAsync(); // 
 			if (!refreshResult.Success)
@@ -125,7 +130,7 @@ namespace backend.Controllers
 			}
 
 			var watchlistItem = await _context.WatchlistItems
-									.FirstOrDefaultAsync(x => x.Id == id);
+									.FirstOrDefaultAsync(x => x.Id == alertRule.WatchlistItemId);
 
 			if (watchlistItem == null)
 				return NotFound("Watchlist item not found.");
@@ -140,42 +145,41 @@ namespace backend.Controllers
 			decimal rateValue = rateSnapShot.Rate;
 
 			var results = new List<object>();
-			foreach (var alertRules in alertRule)
-			{
-				decimal thresholdValue = decimal.Parse(alertRules.Threshold);
 
-				var isTriggered = alertRules.Condition.Trim() switch
+			decimal thresholdValue = decimal.Parse(alertRule.Threshold);
+
+			var isTriggered = alertRule.Condition.Trim() switch
+			{
+				">" => rateValue > thresholdValue,
+				"<" => rateValue < thresholdValue,
+				">=" => rateValue >= thresholdValue,
+				"<=" => rateValue <= thresholdValue,
+				"==" => rateValue == thresholdValue,
+				"!=" => rateValue != thresholdValue,
+				_ => false
+			};
+
+			if (isTriggered)
+			{
+				var alertEvent = new AlertEvent
 				{
-					">" => rateValue > thresholdValue,
-					"<" => rateValue < thresholdValue,
-					">=" => rateValue >= thresholdValue,
-					"<=" => rateValue <= thresholdValue,
-					"==" => rateValue == thresholdValue,
-					"!=" => rateValue != thresholdValue,
-					_ => false
+					AlertRuleId = alertRule.Id,
+					Rate = rateValue.ToString(),
+					TriggerAt = DateTime.UtcNow
 				};
 
-				if (isTriggered)
-				{
-					var alertEvent = new AlertEvent
-					{
-						AlertRuleId = alertRules.Id,
-						Rate = rateValue.ToString(),
-						TriggerAt = DateTime.UtcNow
-					};
-
-					_context.AlertEvent.Add(alertEvent);
-				}
-
-				results.Add(new
-				{
-					AlertRuleId = alertRules.Id,
-					CurrentRate = rateValue,
-					Threshold = thresholdValue,
-					Condition = alertRules.Condition,
-					Triggered = isTriggered
-				});
+				_context.AlertEvent.Add(alertEvent);
 			}
+
+			results.Add(new
+			{
+				AlertRuleId = alertRule.Id,
+				CurrentRate = rateValue,
+				Threshold = thresholdValue,
+				Condition = alertRule.Condition,
+				Triggered = isTriggered
+			});
+
 			await _context.SaveChangesAsync();
 
 			return Ok(

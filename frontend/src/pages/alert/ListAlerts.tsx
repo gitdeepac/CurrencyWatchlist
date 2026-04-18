@@ -17,19 +17,19 @@ const ListAlerts = () => {
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { watchlistId, watchlistItemId } = useParams();
-  const [selectedWatchListId, setSelectedWatchListId] = useState(
-    watchlistId ?? Number(sessionStorage.getItem("selectedWatchListId")),
-  );
-  const [selectedWatchListItemId, setSelectedWatchListItemId] = useState(
-    watchlistItemId ?? Number(sessionStorage.getItem("selectedWatchListItemId")),
-  );
+  const [selectedWatchListId, setSelectedWatchListId] = useState(watchlistId);
+  const [selectedWatchListItemId, setSelectedWatchListItemId] =
+    useState(watchlistItemId);
+
+  const [evalResults, setEvalResults] = useState({});
 
   const getAlertList = async (selectedWatchListItemId) => {
     try {
       setIsLoading(true);
       setError(null);
-      const alertListData =
-        await alertApi.getAlertsByWatchlistItemId(selectedWatchListItemId);
+      const alertListData = await alertApi.getAlertsByWatchlistItemId(
+        selectedWatchListItemId,
+      );
       if (alertListData.success) {
         setAlertList(alertListData.data.data || []);
       } else {
@@ -68,18 +68,24 @@ const ListAlerts = () => {
     }
   };
 
-  const handleEvalute = async (wathclistItemsId) => {
+  const handleEvalute = async (alertId) => {
     try {
-      const evaluate = await alertApi.evaluate(wathclistItemsId);
+      const evaluateResult = await alertApi.evaluate(alertId);
 
-      if (!evaluate.success) {
-        toast.error(evaluate.message);
+      if (!evaluateResult.success) {
+        toast.error(evaluateResult.message);
         return;
       }
 
-      toast.success(evaluate.data.message);
-
-      console.log(evaluate.data);
+      
+      const result = evaluateResult.data.data[0];
+	  if(result.triggered){
+		setEvalResults((prev) => ({ ...prev, [alertId]: result }));
+		toast.success("Yes Condition matched")
+	  }else{
+		setEvalResults((prev) => ({ ...prev, [alertId]: result }));
+		toast.error("No! Condition not matched")
+	  }
     } catch (err: any) {
       setError(err.response?.data?.message);
       toast.error(err.response?.data?.message);
@@ -97,12 +103,15 @@ const ListAlerts = () => {
               <h4 className="m-0">Alert - Listing</h4>
               <div className="d-flex gap-2">
                 <NavLink
-                  to={`/alertService/${selectedWatchListItemId}/add`}
+                  to={`/watchlistItems/${selectedWatchListId}/alertService/${selectedWatchListItemId}/add`}
                   className="btn btn-primary"
                 >
                   Create Alert
                 </NavLink>
-                <NavLink to={`/watchlistItems/${selectedWatchListId}`} className="btn btn-primary">
+                <NavLink
+                  to={`/watchlistItems/${selectedWatchListId}`}
+                  className="btn btn-success"
+                >
                   Back
                 </NavLink>
               </div>
@@ -135,29 +144,58 @@ const ListAlerts = () => {
                       </tr>
                     ) : (
                       alertList.map((item, index) => (
-                        <tr key="">
-                          <th scope="row">{index + 1}</th>
-                          <td>{item.condition}</td>
-                          <td>{item.threshold}</td>
-                          <td className="d-flex gap-2">
-                            <button
-                              className="btn btn-danger"
-                              onClick={() => handleEvalute(item.watchlistItemId)}
-                              disabled={isDeleting === item.id}
-                            >
-                              Evaluate
-                            </button>
-                            <button
-                              className="btn btn-danger"
-                              onClick={() => handleDelete(item.id)}
-                              disabled={isDeleting === item.id}
-                            >
-                              {isDeleting === item.id
-                                ? "Deleting..."
-                                : "Delete"}
-                            </button>
-                          </td>
-                        </tr>
+                        <>
+                          <tr key={`alert${index}`}>
+                            <th scope="row">{index + 1}</th>
+                            <td>{item.condition}</td>
+                            <td>{item.threshold}</td>
+                            <td className="d-flex gap-2">
+                              <button
+                                className="btn btn-warning"
+                                onClick={() => handleEvalute(item.id)}
+                                disabled={isDeleting === item.id}
+                              >
+                                Evaluate
+                              </button>
+                              <button
+                                className="btn btn-danger"
+                                onClick={() => handleDelete(item.id)}
+                                disabled={isDeleting === item.id}
+                              >
+                                {isDeleting === item.id
+                                  ? "Deleting..."
+                                  : "Delete"}
+                              </button>
+                            </td>
+                          </tr>
+                          <tr key={`alert_evaluate${index}`}>
+                            
+                              {evalResults[item.id] && (
+                                <>
+                                  <td>
+                                    <span>
+                                      Rate: {evalResults[item.id].currentRate}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <span>
+                                      Threshold:{" "}
+                                      {evalResults[item.id].condition}{" "}
+                                      {evalResults[item.id].threshold}
+                                    </span>
+                                  </td>
+                                  <td colSpan={2}>
+                                    <span>
+                                      Triggered:{" "}
+                                      {evalResults[item.id].triggered
+                                        ? "YES"
+                                        : "NO"}
+                                    </span>
+                                  </td>
+                                </>
+                              )}
+                          </tr>
+                        </>
                       ))
                     )}
                   </tbody>

@@ -26,24 +26,6 @@ const RateListService = () => {
     endDate: "",
   });
 
-  const handleRefreshRates = async () => {
-    try {
-      setIsLoading(true);
-      const refreshRateService = await rateApi.refreshRate();
-      if (!refreshRateService.success) {
-        toast.error(refreshRateService.data.message);
-        return;
-      }
-
-      //   console.log(refreshRateService);
-
-      toast.success(refreshRateService.data.message);
-    } catch (error) {
-      toast.error("Error refreshing rates:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handelChangeLatest = (e) => {
     const { name, value } = e.target;
@@ -287,18 +269,7 @@ const RateListService = () => {
         </div>
         <div className="col-12 px-4">
           <div className="card">
-            <div className="card-header d-flex justify-content-between">
-              <h4 className="m-0">Rate - Listing</h4>
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-danger"
-                  onClick={handleRefreshRates}
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Refreshing..." : "$ Refresh Rates"}
-                </button>
-              </div>
-            </div>
+            
             <div className="card-body">
               {isLoading ? (
                 <p className="text-muted">Loading...</p>

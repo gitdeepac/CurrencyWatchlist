@@ -8,6 +8,7 @@ import CreateWatchlistItems from "../pages/watchlistItem/CreateWatchlistItems";
 import RateListService from "../pages/rates/ListRates";
 import ListAlerts from "../pages/alert/ListAlerts";
 import CreateListAlert from "../pages/alert/CreateListAlert";
+import ListRateSnapshot from "../pages/ratesnapshot/ListRateSnapshot";
 
 export const router = createBrowserRouter([
   {
@@ -21,7 +22,8 @@ export const router = createBrowserRouter([
 	  { path: "watchlistItems/:watchlistId/add", element: <CreateWatchlistItems /> },
 	  { path: "rateService", element: <RateListService /> },
 	  { path: "watchlistItems/:watchlistId/alertService/:watchlistItemId", element: <ListAlerts /> },
-	  { path: "watchlistItems/:watchlistId/alertService/:watchlistId/add", element: <CreateListAlert /> },
+	  { path: "watchlistItems/:watchlistId/alertService/:watchlistItemId/add", element: <CreateListAlert /> },
+	  { path: "ratesnapshot", element: <ListRateSnapshot /> },
     ],
   },
   //   { path: "*", element: <NotFound /> },

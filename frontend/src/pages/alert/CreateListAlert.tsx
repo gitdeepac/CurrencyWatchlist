@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { alertApi } from "../../services/alert/api";
@@ -11,10 +11,20 @@ const CreateListAlert = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { watchlistId } = useParams();
-  const [selectedWatchListId, setSelectedWatchListId] = useState(
-    watchlistId ?? sessionStorage.getItem("selectedWatchListId"),
+
+  const { watchlistId, watchlistItemId } = useParams();
+  const [selectedWatchListId, setSelectedWatchListId] = useState(() =>
+    Number(watchlistId),
   );
+  const [selectedWatchListItemId, setSelectedWatchListItemId] = useState(() =>
+    Number(watchlistItemId),
+  );
+
+  useEffect(() => {
+    setSelectedWatchListId(Number(watchlistId));
+    setSelectedWatchListItemId(Number(watchlistItemId));
+  }, [watchlistId, watchlistItemId]);
+
   const handelChange = (e) => {
     const { name, value } = e.target;
     setFormValue({
@@ -27,10 +37,12 @@ const CreateListAlert = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+
     // API call
     try {
       var responseAlert = await alertApi.create({
-        watchlistItemId: Number(selectedWatchListId),
+        watchlistItemId: Number(selectedWatchListItemId),
         condition: formValue.condition,
         threshold: formValue.threshold,
       });
@@ -67,18 +79,19 @@ const CreateListAlert = () => {
                       type="text"
                       name="condition"
                       value={formValue.condition}
-                      placeholder="Please enter condition"
+                      placeholder="Please enter condition (<, >, =>, =<, = )"
                       className="form-control"
                       onChange={handelChange}
+					  maxLength={2}
                     />
                   </div>
                   <div className="col-6">
                     <label htmlFor=" "> Threshold</label>
                     <input
-                      type="text"
+                      type="number"
                       name="threshold"
                       value={formValue.threshold}
-                      placeholder="Please enter threshold"
+                      placeholder="Please enter threshold Ex(114.0, 66.70)"
                       className="form-control"
                       onChange={handelChange}
                     />
@@ -94,7 +107,10 @@ const CreateListAlert = () => {
                     >
                       {loading ? "Creating..." : "Create Alert"}
                     </button>
-                    <NavLink className="btn btn-danger" to={`/alertService/${selectedWatchListId}`}>
+                    <NavLink
+                      className="btn btn-danger"
+                      to={`/watchlistItems/${selectedWatchListId}/alertService/${selectedWatchListItemId}`}
+                    >
                       Cancel
                     </NavLink>
                   </div>

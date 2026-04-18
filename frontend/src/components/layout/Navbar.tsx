@@ -43,7 +43,17 @@ const Navbar = () => {
                       Rate Service
                     </NavLink>
                   </li>
-				  {/* <li className="nav-item">
+                  <li className="nav-item">
+                    <NavLink
+                      className={({ isActive }) =>
+                        isActive ? "nav-link active" : "nav-link"
+                      }
+                      to="/ratesnapshot"
+                    >
+                      View Rate Snapshots
+                    </NavLink>
+                  </li>
+                  {/* <li className="nav-item">
                     <NavLink
                       className={({ isActive }) =>
                         isActive ? "nav-link active" : "nav-link"
