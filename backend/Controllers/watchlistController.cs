@@ -16,7 +16,7 @@ namespace backend.Controllers
 
 	// Manages watchlists and their associated items.
 
-	[Route("api/[Controller]")]
+	[Route("api/[controller]")]
 	[ApiController]
 	public class WatchlistsController : ControllerBase
 	{
@@ -48,9 +48,9 @@ namespace backend.Controllers
 
 		// Returns a single watchlist by ID — items not included here, intentional
 		[HttpGet("{Id:int}")]
-		public async Task<IActionResult> GetById([FromRoute] int Id)
+		public async Task<IActionResult> GetById([FromRoute] int id)
 		{
-			var watchlist = await _watchlistRepository.GetByIdAsync(Id);
+			var watchlist = await _watchlistRepository.GetByIdAsync(id);
 
 			if (watchlist == null)
 			{
@@ -69,20 +69,16 @@ namespace backend.Controllers
 
 			var watchlistModel = watchlistDto.ToWatchlistFromCreateDTO();
 			await _watchlistRepository.CreateWatchlistAsync(watchlistModel);
-			
+
 			return CreatedAtAction(nameof(GetById), new { id = watchlistModel.Id },
 				ApiResponse<object?>.Success(watchlistModel.ToWatchlistDto(), "Successfully created watchlist", 201));
 		}
 
 
 		// Hard delete — no soft delete, intentional
-		[HttpDelete]
-		[Route("{Id:int}")]
+		[HttpDelete("{id:int}")]
 		public async Task<IActionResult> Delete([FromRoute] int Id)
 		{
-			if (!ModelState.IsValid)
-				return BadRequest(ModelState);
-
 			var watchlistModel = await _watchlistRepository.DeleteWatchlistAsync(Id);
 
 			if (watchlistModel == null)

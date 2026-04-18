@@ -43,11 +43,10 @@ namespace backend.Controllers
 
 			var watchlistItem = await _watchlistItemRepository.GetAllAsync(watchlistId);
 
-			var watchlistDto = watchlistItem.Select(wl => wl.ToWatchlistItemDto());
-
 			if (watchlistItem == null)
 				return NotFound(ApiResponse<object?>.NotFound($"Item was not found in watchlist {watchlistId}"));
 
+			var watchlistDto = watchlistItem.Select(wl => wl.ToWatchlistItemDto());
 			return Ok(ApiResponse<object?>.Success(watchlistDto, "Successfully Fetch all WatchlistItems", 200));
 		}
 
@@ -73,7 +72,7 @@ namespace backend.Controllers
 			if (watchlistItem == null)
 				return NotFound(ApiResponse<object?>.NotFound($"Item with ID {Id} was not found in watchlist {watchlistId}"));
 
-			return Ok(ApiResponse<object?>.Success(watchlistItem.ToWatchlistItemDto(), "Successfully Fetch all WatchlistItems", 200));
+			return Ok(ApiResponse<object?>.Success(watchlistItem.ToWatchlistItemDto(), "Successfully Fetch WatchlistItems", 200));
 		}
 
 		// Adds a currency pair item to a watchlist
@@ -86,8 +85,8 @@ namespace backend.Controllers
 				return BadRequest(ModelState);
 
 
-			var watchlistExist = await _watchlistRepository.GetByIdAsync(watchlistId);
-			if (watchlistExist == null)
+			var watchlistExists = await _watchlistRepository.GetByIdAsync(watchlistId);
+			if (watchlistExists == null)
 				return NotFound(ApiResponse<object?>.NotFound($"Watchlist with ID {watchlistId} does not exist."));
 
 			// Duplicate check — same pair in same watchlist is not allowed
@@ -102,7 +101,7 @@ namespace backend.Controllers
 			await _watchlistItemRepository.CreateWatchlistAsync(watchlistItem);
 
 			return CreatedAtAction(nameof(GetById), new { watchlistId, id = watchlistItem.Id },
-			ApiResponse<object?>.Success(watchlistItem.ToWatchlistItemDto(), "Successfully Created Wathclist Item.", 201));
+			ApiResponse<object?>.Success(watchlistItem.ToWatchlistItemDto(), "Successfully Created Watchlist Item.", 201));
 		}
 
 		// Hard delete by item ID
@@ -113,11 +112,9 @@ namespace backend.Controllers
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);
 
-			// 
-			var watchlistExists = await _watchlistRepository.GetByIdAsync(watchlistId);
+			var watchlistExists= await _watchlistRepository.GetByIdAsync(watchlistId);
 			if (watchlistExists == null)
 				return NotFound(ApiResponse<object?>.NotFound($"Watchlist with ID {watchlistId} does not exist."));
-
 
 			var deletedItem = await _watchlistItemRepository.DeleteWatchlistAsync(Id);
 

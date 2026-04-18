@@ -22,7 +22,7 @@ namespace backend.Controllers
 	{
 
 		// Injected via DI
-		public readonly ApplicationDbContext _context;
+		private readonly ApplicationDbContext _context;
 		private readonly RateRefreshService _rateRefreshService;
 		private readonly ILogger<AlertRuleController> _logger;
 		public AlertRuleController(ApplicationDbContext context, RateRefreshService rateRefreshService, ILogger<AlertRuleController> logger)
@@ -36,10 +36,6 @@ namespace backend.Controllers
 		[HttpGet]
 		public async Task<IActionResult> GetAllRule()
 		{
-			if (!ModelState.IsValid)
-				return BadRequest(ModelState);
-
-
 			var alertRuleListDto = await _context.AlertRule.ToListAsync();
 
 			return Ok(ApiResponse<object?>.Success(
@@ -53,7 +49,7 @@ namespace backend.Controllers
 		[HttpGet("{id:int}")]
 		public async Task<IActionResult> GetById([FromRoute] int id)
 		{
-			var alertRuleList = await _context.AlertRule.Where(x => x.WatchlistItemId == id).ToListAsync(); ;
+			var alertRuleList = await _context.AlertRule.FirstOrDefaultAsync(x => x.Id == id); ;
 
 			if (alertRuleList == null)
 			{
@@ -85,9 +81,6 @@ namespace backend.Controllers
 		[Route("{Id:int}")]
 		public async Task<IActionResult> Delete([FromRoute] int Id)
 		{
-			if (!ModelState.IsValid)
-				return BadRequest(ModelState);
-
 			var alertListModel = await _context.AlertRule.FirstOrDefaultAsync(x => x.Id == Id);
 
 			if (alertListModel == null)
@@ -118,14 +111,14 @@ namespace backend.Controllers
 			var alertRule = await _context.AlertRule.Where(x => x.Id == id).FirstOrDefaultAsync();
 			if (alertRule == null)
 			{
-				return StatusCode(404, ApiResponse<object?>.ServerError(
+				return NotFound(ApiResponse<object?>.ServerError(
 					$"Failed to fetch the alertrule for : {id}"));
 			}
 
 			var refreshResult = await _rateRefreshService.RefreshRateAsync(); // 
 			if (!refreshResult.Success)
 			{
-				return StatusCode(500, ApiResponse<object?>.ServerError(
+				return NotFound(ApiResponse<object?>.ServerError(
 					$"Failed to refresh rate: {refreshResult.Message}"));
 			}
 
@@ -133,13 +126,15 @@ namespace backend.Controllers
 									.FirstOrDefaultAsync(x => x.Id == alertRule.WatchlistItemId);
 
 			if (watchlistItem == null)
-				return NotFound("Watchlist item not found.");
+				return NotFound(ApiResponse<object?>.ServerError(
+					$"Watchlist item not found."));
 
 			var rateSnapShot = await _context.RateSnapShot
 					.FirstOrDefaultAsync(r => r.QuoteCurrency == watchlistItem.QuoteCurrency);
 			if (rateSnapShot == null)
 			{
-				return NotFound("Rate snapshot not found.");
+				return NotFound(ApiResponse<object?>.ServerError(
+					$"Rate snapshot not found."));
 			}
 			// now check condition
 			decimal rateValue = rateSnapShot.Rate;
@@ -148,16 +143,22 @@ namespace backend.Controllers
 
 			decimal thresholdValue = decimal.Parse(alertRule.Threshold);
 
-			var isTriggered = alertRule.Condition.Trim() switch
-			{
-				">" => rateValue > thresholdValue,
-				"<" => rateValue < thresholdValue,
-				">=" => rateValue >= thresholdValue,
-				"<=" => rateValue <= thresholdValue,
-				"==" => rateValue == thresholdValue,
-				"!=" => rateValue != thresholdValue,
-				_ => false
-			};
+			var condition = alertRule.Condition.Trim();
+
+			bool isTriggered = false;
+
+			if (condition == ">")
+				isTriggered = rateValue > thresholdValue;
+			else if (condition == "<")
+				isTriggered = rateValue < thresholdValue;
+			else if (condition == ">=")
+				isTriggered = rateValue >= thresholdValue;
+			else if (condition == "<=")
+				isTriggered = rateValue <= thresholdValue;
+			else if (condition == "==")
+				isTriggered = rateValue == thresholdValue;
+			else if (condition == "!=")
+				isTriggered = rateValue != thresholdValue;
 
 			if (isTriggered)
 			{
@@ -185,8 +186,7 @@ namespace backend.Controllers
 			return Ok(
 				ApiResponse<object?>.Success(
 					results,
-					"Alert evaluation completed",
-					200
+					"Alert evaluation completed"
 				)
 			);
 		}
