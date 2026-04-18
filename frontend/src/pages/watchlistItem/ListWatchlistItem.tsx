@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, useLocation, useParams } from "react-router-dom";
+import { NavLink , useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { watchlistItemApi } from "../../services/watchlistItem/api";
 
@@ -11,7 +11,6 @@ interface WatchlistItem {
   createAt: string;
 }
 const ListWatchlistItem = () => {
-  const location = useLocation();
   const [watchlistItemList, setWatchlistItemList] = useState<WatchlistItem[]>(
     [],
   );
