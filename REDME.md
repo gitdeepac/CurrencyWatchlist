@@ -9,9 +9,89 @@
 - Run Database Migration - command dotnet ef database update
 - Run the Application - dotnet run / dotnet watch run
 
+## Unit Testing Installation
+
+# From root
+- dotnet new xunit -n backend.Tests
+- dotnet add backend.Tests reference backend
+- dotnet restore
+# Move into test project
+- cd backend.Tests
+# Install packages
+- dotnet add package xunit
+- dotnet add package Moq
+- dotnet add package Microsoft.NET.Test.Sdk
+- dotnet add package xunit.runner.visualstudio
+# Run tests
+- cd ..
+- dotnet test
+
+
 ## Overview
 
 This API provides exchange rate tracking and watchlist management. It integrates with the Frankfurter external rate API and stores data using Entity Framework Core.
+
+## Tech Stack
+- .NET 8 Web API
+- Entity Framework Core
+- SQLite
+- xUnit (for testing)
+- Moq (for unit testing)
+
+## External API
+
+- This application uses the Frankfurter API to fetch exchange rates: 
+- https://www.frankfurter.app/
+
+
+## Project Structrue
+
+backend/
+│
+├── Controllers/
+│   ├── RatesController.cs
+│   ├── WatchlistsController.cs
+│   ├── WatchlistsItemController.cs
+│   └── AlertRuleController.cs
+│
+├── Services/
+│   ├── RateRefreshService
+│   ├── LatestRateService
+│   ├── HistoryRateService
+│
+├── Repositories/
+│   ├── WatchlistRepository
+│   ├── WatchlistItemRepository
+│
+├── Models/
+|	├── AlertEvent
+│   ├── AlertRule
+│   ├── RateSnapShot
+│   ├── Watchlist
+│   ├── WatchlistItem
+│
+├── Dtos/
+│   ├── Alert/AlertRuleListDto
+│   ├── Alert/CreateAlertRuleRequestDto
+│   ├── External/ExternalApiRawResponse
+│   ├── Rate/RateSnapShotDto
+│   ├── Watchlist/CreateWatchlistRequestDto
+│   ├── Watchlist/WatchlistDto
+│   ├── WatchlistItem/CreateWatchlistItemRequestDto
+│   ├── WatchlistItem/WatchlistItemDto
+│   ├── WatchlistItem/watchlistItemSummaryDto
+|
+├── Mappers/
+│   ├── AlertRuleMapper
+│   ├── WatchlistItemMappers
+│   ├── WatchlistMappers
+|
+├── Helpers/
+│   └── ApiResponse.cs
+│
+└── Data/
+    └── ApplicationDbContext.cs
+
 
 ## Base URL
 
@@ -21,12 +101,14 @@ This API provides exchange rate tracking and watchlist management. It integrates
 
 ### 1. AlertRule - /api/AlertRule
 
-| Method | Endpoint              | Description                   |
-| ------ | --------------------- | ----------------------------- |
-| GET    | `/api/AlertRule`      | Get all alert rules           |
-| GET    | `/api/AlertRule/{id}` | Get a single alert rule by ID |
-| POST   | `/api/AlertRule`      | Create a new alert rule       |
-| DELETE | `/api/AlertRule/{id}` | Delete an alert rule by ID    |
+| Method | Endpoint                       | Description                   |
+| ------ | ------------------------------ | ----------------------------- |
+| GET    | `/api/AlertRule`               | Get all alert rules           |
+| GET    | `/api/AlertRule/{id}`          | Get a single alert rule by ID |
+| POST   | `/api/AlertRule`               | Create a new alert rule       |
+| DELETE | `/api/AlertRule/{id}`          | Delete an alert rule by ID    |
+| POST   | `/api/AlertRule/{id}/evaluate` | Evaluate Alert Rule           |
+
 
 ### 2. Rates — `/api/Rates`
 
@@ -53,11 +135,8 @@ This API provides exchange rate tracking and watchlist management. It integrates
 | POST   | `/api/watchlists/{watchlistId}/items`      | Add a currency pair item to a watchlist |
 | DELETE | `/api/watchlists/{watchlistId}/items/{id}` | Delete an item by ID                    |
 
-# FrontEnd
 
-### Install Required Tool
 
-- Got to frontend folder
-- Run : npm install
-- Install concurrently (used to run multiple commands at once):
-  - Command : npm install concurrently --save-dev
+
+
+
