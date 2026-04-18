@@ -18,8 +18,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-builder.Services.AddScoped<IWatchlistRepository, CreateWatchlistRepository>();
-builder.Services.AddScoped<IWatchlistItemRepository, CreateWatchlistItemRepository>();
+builder.Services.AddScoped<IWatchlistRepository, WatchlistRepository>();
+builder.Services.AddScoped<IWatchlistItemRepository, WatchlistItemRepository>();
 builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<RateRefreshService>();
