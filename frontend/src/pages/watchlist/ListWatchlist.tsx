@@ -34,7 +34,7 @@ const ListWatchlist = () => {
   };
 
   const handleViewDetail = (item) => {
-    navigate(`/watchlistItems`, { state: { id: item.id } });
+    navigate(`/watchlistItems/${item.id}`);
   };
 
   useEffect(() => {
@@ -112,7 +112,7 @@ const ListWatchlist = () => {
                               className="btn btn-warning"
                               onClick={() => handleViewDetail(item)}
                             >
-                              View Detail
+                              View Items Detail
                             </button>
                             <button
                               className="btn btn-danger"

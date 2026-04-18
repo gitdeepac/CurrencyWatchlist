@@ -28,9 +28,31 @@ export const alertApi = {
       };
     }
   },
-  getAllAlerts: async (alertId: number) => {
+  getAllAlerts: async () => {
     try {
       const res = await api.get(`/AlertRule`);
+      return { success: true, data: res.data };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Something went wrong",
+      };
+    }
+  },
+  getAlertsByWatchlistItemId: async (watchlistItemId: number) => {
+    try {
+      const res = await api.get(`/AlertRule/${watchlistItemId}`);
+      return { success: true, data: res.data };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Something went wrong",
+      };
+    }
+  },
+  evaluate: async (watchlistItemId: number) => {
+    try {
+      const res = await api.post(`/AlertRule/${watchlistItemId}/evaluate`);
       return { success: true, data: res.data };
     } catch (error: any) {
       return {

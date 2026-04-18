@@ -25,13 +25,13 @@ namespace backend.Services
 		{
 			var baseCurr = baseCurrency.Trim().ToUpper();
 			var quoteCurr = quoteCurrency.Trim().ToUpper();
-			var startDate = fromDate;
-			var endDate = toDate;
+			var startDate = fromDate.ToString("yyyy-MM-dd");
+			var endDate = toDate.ToString("yyyy-MM-dd");
 
 			_logger.LogInformation("Fetching rate for {Base}/{Quote} history data {From}/{To} based on from and to date", baseCurr, quoteCurr, startDate, endDate);
 
 			var httpClient = _httpClientFactory.CreateClient();
-			var url = $"https://api.frankfurter.dev/v2/rates?base={baseCurr}&quotes={quoteCurr}&from={startDate}$to={endDate}";
+			var url = $"https://api.frankfurter.dev/v2/rates?base={baseCurr}&quotes={quoteCurr}&from={startDate}&to={endDate}";
 
 			try
 			{

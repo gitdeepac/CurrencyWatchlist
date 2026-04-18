@@ -32,14 +32,12 @@ namespace backend.Services
 			// Semaphore — max 3 concurrent requests to Frankfurter
 			var semaphore = new SemaphoreSlim(3, 3);
 
+			// Handle duplication call to api through distinct pair.
 			var distinctPairs = await _applicationDbContext.WatchlistItems
-			.Select(w => new WatchlistItemSummaryDto
-			{
-				BaseCurrency = w.BaseCurrency,
-				QuoteCurrency = w.QuoteCurrency
-			})
+			.Select(w => new { w.BaseCurrency, w.QuoteCurrency })
 			.Distinct()
 			.ToListAsync();
+			_logger.LogInformation("distinctPairs {pairs}", distinctPairs);
 
 			if (distinctPairs.Count == 0)
 			{
@@ -53,9 +51,10 @@ namespace backend.Services
 
 				try
 				{
-					var url = $"https://api.frankfurter.app/latest?from={pair.BaseCurrency}&to={pair.QuoteCurrency}";
+					var url = $"https://api.frankfurter.dev/v2/rates?base={pair.BaseCurrency}&quotes={pair.QuoteCurrency}";
 
-					var apiResponse = await httpClient.GetFromJsonAsync<ExternalApiRawResponse>(url);
+					var apiResponseList = await httpClient.GetFromJsonAsync<List<ExternalApiRawResponse>>(url);
+					var apiResponse = apiResponseList?.FirstOrDefault();
 
 					var rateValue = apiResponse?.Rate;
 
@@ -64,8 +63,8 @@ namespace backend.Services
 						return new RateSnapShotDto
 						{
 							BaseCurrency = apiResponse.Base,
-							QuoteCurrency = apiResponse.Quote ?? "",
-							Rate = (decimal)rateValue,
+							QuoteCurrency = apiResponse.Quote,
+							Rate = apiResponse.Rate,
 							SourceTimestamp = apiResponse.Date.ToDateTime(TimeOnly.MinValue),
 							FetchedAt = DateTime.Now
 						};
@@ -98,20 +97,20 @@ namespace backend.Services
 			var results = await Task.WhenAll(fetchTasks);
 
 			// Filter Empty ones.
-			var fetchedRates = results
-				  .Where(r => r != null)
-				  .Cast<RateSnapShotDto>()
-				  .ToList();
+			var fetchedRates = results.OfType<RateSnapShotDto>().ToList();
+
+			_logger.LogInformation("fetchedRates: {rates}",System.Text.Json.JsonSerializer.Serialize(fetchedRates));
 
 			int created = 0;
 			int updated = 0;
 
 			foreach (var dto in fetchedRates)
 			{
-				var existing = await _applicationDbContext.RateSnapShot
-					.FirstOrDefaultAsync(r =>
-						r.BaseCurrency == dto.BaseCurrency &&
-						r.QuoteCurrency == dto.QuoteCurrency);
+				var existing = await _applicationDbContext.RateSnapShot.Where( r => 
+					r.BaseCurrency == dto.BaseCurrency &&
+					r.QuoteCurrency == dto.QuoteCurrency
+				).FirstOrDefaultAsync();
+					
 
 				if (existing == null) // create case
 				{

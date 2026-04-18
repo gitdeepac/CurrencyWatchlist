@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { watchlistItemApi } from "../../services/watchlistItem/api";
 
@@ -16,7 +16,12 @@ const ListWatchlistItem = () => {
     [],
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedId, setSelectedId] = useState(location.state?.id);
+  const { watchlistId } = useParams();
+  const [selectedWatchListId, setSelectedWatchListId] = useState(
+    Number(watchlistId) ?? Number(sessionStorage.getItem("selectedWatchListId")),
+  );
+  sessionStorage.setItem("selectedWatchListId", watchlistId);
+
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [error, setError] = useState(null);
 
@@ -44,7 +49,7 @@ const ListWatchlistItem = () => {
     // API call
     try {
       const deleteWatchListResp = await watchlistItemApi.delete(
-        selectedId,
+        selectedWatchListId,
         watchlistItemId,
       );
 
@@ -65,8 +70,8 @@ const ListWatchlistItem = () => {
   };
 
   useEffect(() => {
-    handleWatchlistListing(selectedId);
-  }, [selectedId]);
+    handleWatchlistListing(selectedWatchListId);
+  }, [selectedWatchListId]);
 
   return (
     <div className="container-fluid">
@@ -77,12 +82,13 @@ const ListWatchlistItem = () => {
               <h4 className="m-0">Watchlist Item - Listing</h4>
               <div className="d-flex gap-2">
                 <NavLink
-                  to={`/watchlistItems/${selectedId}/add`}
+                  to={`/watchlistItems/${selectedWatchListId}/add`}
                   className="btn btn-primary"
                   aria-disabled={watchlistItemList.length === 0 ? true : false}
                 >
                   Create WatchlistItems
                 </NavLink>
+
                 <NavLink to={`/watchlist`} className="btn btn-success">
                   Back
                 </NavLink>
@@ -103,8 +109,8 @@ const ListWatchlistItem = () => {
                     <tr>
                       <th scope="col">#</th>
                       <th scope="col">Watchlist Id</th>
-                      <th scope="col">Base Curreny</th>
-                      <th scope="col">Quote Curreny </th>
+                      <th scope="col">Base Currency</th>
+                      <th scope="col">Quote Currency </th>
                       <th scope="col">Action</th>
                     </tr>
                   </thead>
@@ -119,19 +125,20 @@ const ListWatchlistItem = () => {
                       watchlistItemList.map((item, index) => (
                         <tr key={item.id}>
                           <th scope="row">{index + 1}</th>
-                          <td>{item.id}</td>
+                          <td>{item.watchlistId}</td>
                           <td>{item.baseCurrency}</td>
                           <td>{item.quoteCurrency}</td>
                           <td className="d-flex gap-2">
                             <NavLink
-                              to={`/alertService/${selectedId}`}
+                              to={`alertService/${item.id}`}
                               className="btn btn-warning"
                               aria-disabled={
                                 watchlistItemList.length === 0 ? true : false
                               }
                             >
-                              View Alert Detail
+                              Alerts
                             </NavLink>
+
                             <button
                               className="btn btn-danger"
                               onClick={() => handleDelete(item.id)}

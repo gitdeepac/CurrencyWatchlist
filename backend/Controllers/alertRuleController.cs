@@ -53,7 +53,7 @@ namespace backend.Controllers
 		[HttpGet("{id:int}")]
 		public async Task<IActionResult> GetById([FromRoute] int id)
 		{
-			var alertRuleList = await _context.AlertRule.FindAsync(id);
+			var alertRuleList = await _context.AlertRule.Where(x => x.WatchlistItemId == id).ToListAsync(); ;
 
 			if (alertRuleList == null)
 			{
@@ -106,7 +106,7 @@ namespace backend.Controllers
 		{
 
 			// STEPS
-			// 1. Check the alert is avaliable into database
+			// 1. Check the alert is avaliable into database with watchlist id
 			// 2. Update the rate through service into database
 			// 3. Get the watchlist from Alert
 			// 4. Check the condition matched
@@ -115,69 +115,73 @@ namespace backend.Controllers
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);
 
-			var alertRule = await _context.AlertRule.FindAsync(id);
-			if (alertRule == null)
-			{
-				return NotFound(ApiResponse<object?>.NotFound("Alert rule not found"));
-			}
-			_logger.LogWarning("Wathlist Id: {watchlistId}", alertRule.WatchlistItemId);
+			var alertRule = await _context.AlertRule.Where(x => x.WatchlistItemId == id).ToListAsync();
+
 			var refreshResult = await _rateRefreshService.RefreshRateAsync(); // 
 			if (!refreshResult.Success)
 			{
 				return StatusCode(500, ApiResponse<object?>.ServerError(
 					$"Failed to refresh rate: {refreshResult.Message}"));
 			}
-			var rateSnapShot = await _context.WatchlistItems
-				.Where(x => x.Id == alertRule.WatchlistItemId)
-				.Join(
-					_context.RateSnapShot,
-					watchlistItem => watchlistItem.QuoteCurrency,
-					rateSnapshot => rateSnapshot.QuoteCurrency,
-					(watchlistItem, rateSnapshot) => rateSnapshot
-				)
-				.FirstOrDefaultAsync();
+
+			var watchlistItem = await _context.WatchlistItems
+									.FirstOrDefaultAsync(x => x.Id == id);
+
+			if (watchlistItem == null)
+				return NotFound("Watchlist item not found.");
+
+			var rateSnapShot = await _context.RateSnapShot
+					.FirstOrDefaultAsync(r => r.QuoteCurrency == watchlistItem.QuoteCurrency);
 			if (rateSnapShot == null)
 			{
 				return NotFound("Rate snapshot not found.");
 			}
 			// now check condition
-			decimal thresholdValue = decimal.Parse(alertRule.Threshold);
 			decimal rateValue = rateSnapShot.Rate;
-			var result = alertRule.Condition.Trim() switch
-			{
-				">" => rateValue > thresholdValue,
-				"<" => rateValue < thresholdValue,
-				">=" => rateValue >= thresholdValue,
-				"<=" => rateValue <= thresholdValue,
-				"==" => rateValue == thresholdValue,
-				"!=" => rateValue != thresholdValue,
-				_ => false
-			};
 
-			if (result)
+			var results = new List<object>();
+			foreach (var alertRules in alertRule)
 			{
-				var alertEvent = new AlertEvent
+				decimal thresholdValue = decimal.Parse(alertRules.Threshold);
+
+				var isTriggered = alertRules.Condition.Trim() switch
 				{
-					AlertRuleId = alertRule.Id,
-					Rate = rateValue.ToString(),
-					TriggerAt = DateTime.UtcNow
+					">" => rateValue > thresholdValue,
+					"<" => rateValue < thresholdValue,
+					">=" => rateValue >= thresholdValue,
+					"<=" => rateValue <= thresholdValue,
+					"==" => rateValue == thresholdValue,
+					"!=" => rateValue != thresholdValue,
+					_ => false
 				};
 
-				_context.AlertEvent.Add(alertEvent);
-				await _context.SaveChangesAsync();
+				if (isTriggered)
+				{
+					var alertEvent = new AlertEvent
+					{
+						AlertRuleId = alertRules.Id,
+						Rate = rateValue.ToString(),
+						TriggerAt = DateTime.UtcNow
+					};
+
+					_context.AlertEvent.Add(alertEvent);
+				}
+
+				results.Add(new
+				{
+					AlertRuleId = alertRules.Id,
+					CurrentRate = rateValue,
+					Threshold = thresholdValue,
+					Condition = alertRules.Condition,
+					Triggered = isTriggered
+				});
 			}
+			await _context.SaveChangesAsync();
 
 			return Ok(
 				ApiResponse<object?>.Success(
-					new
-					{
-						AlertRuleId = alertRule.Id,
-						CurrentRate = rateValue,
-						Threshold = thresholdValue,
-						Condition = alertRule.Condition,
-						Triggered = result
-					},
-					result ? "Alert triggered successfully." : "Alert evaluated successfully.",
+					results,
+					"Alert evaluation completed",
 					200
 				)
 			);
