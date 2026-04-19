@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using backend.Data;
 using backend.Dtos.Rate;
 using backend.Helpers;
+using backend.Interfaces;
 using backend.Mappers;
 using backend.Models;
 using backend.Services;
@@ -22,13 +23,13 @@ namespace backend.Controllers
 	{
 
 		// Injected via DI
-		private readonly ApplicationDbContext _context;
-		private readonly RateRefreshService _rateRefreshService;
+		private readonly IAlertEvaluationService _alertService;
+		private readonly IAlertRuleRepository _alertRepository;
 		private readonly ILogger<AlertRuleController> _logger;
-		public AlertRuleController(ApplicationDbContext context, RateRefreshService rateRefreshService, ILogger<AlertRuleController> logger)
+		public AlertRuleController(IAlertEvaluationService alertService, IAlertRuleRepository alertRepository, ILogger<AlertRuleController> logger)
 		{
-			_context = context;
-			_rateRefreshService = rateRefreshService;
+			_alertService = alertService;
+			_alertRepository = alertRepository;
 			_logger = logger;
 		}
 
@@ -36,10 +37,11 @@ namespace backend.Controllers
 		[HttpGet]
 		public async Task<IActionResult> GetAllRule()
 		{
-			var alertRuleListDto = await _context.AlertRule.ToListAsync();
-
+			_logger.LogInformation("Trigger Repo to get all rules.");
+			var alertResults = await _alertRepository.GetAllRuleAsync();
+			
 			return Ok(ApiResponse<object?>.Success(
-				data: alertRuleListDto,
+				data: alertResults,
 				message: "Successfully fetch alert rule list",
 				statusCode: 200
 			));
@@ -49,27 +51,26 @@ namespace backend.Controllers
 		[HttpGet("{id:int}")]
 		public async Task<IActionResult> GetById([FromRoute] int id)
 		{
-			var alertRuleList = await _context.AlertRule.FirstOrDefaultAsync(x => x.Id == id); ;
-
-			if (alertRuleList == null)
+			_logger.LogInformation("Trigger Repo to get data by Id.");
+			var alertRuleResult = await _alertRepository.GetByIdAsync(id);
+			
+			if (alertRuleResult == null)
 			{
 				return NotFound(ApiResponse<object?>.NotFound("No record found"));
 			}
 
-			return Ok(ApiResponse<object?>.Success(alertRuleList, "Successfully fetch alert rule", 200));
+			return Ok(ApiResponse<object?>.Success(alertRuleResult, "Successfully fetch alert rule", 200));
 		}
 
 		// Post new alert rule from request body
 		[HttpPost]
 		public async Task<IActionResult> CreateAlertRule([FromBody] CreateAlertRuleRequestDto createRateAlertRequestDto)
 		{
-			if (!ModelState.IsValid)
-				return BadRequest(ModelState);
-
+			_logger.LogInformation("Trigger to get the alertRules from Mappers");
 			var rateAlertRuleModel = createRateAlertRequestDto.ToRateAlertRuleFromCreateDTO();
-			await _context.AlertRule.AddAsync(rateAlertRuleModel);
-			await _context.SaveChangesAsync();
 
+			_logger.LogInformation("Create Method triggered.");
+			await _alertRepository.CreateAlertRuleAsync(rateAlertRuleModel);
 
 			return CreatedAtAction(nameof(GetById), new { id = rateAlertRuleModel.Id },
 				ApiResponse<object?>.Success(rateAlertRuleModel.ToAlertRuleListDto(), "Successfully created alert rule.", 201));
@@ -78,114 +79,28 @@ namespace backend.Controllers
 
 		// Hard delete — no soft delete
 		[HttpDelete]
-		[Route("{Id:int}")]
-		public async Task<IActionResult> Delete([FromRoute] int Id)
+		[Route("{id:int}")]
+		public async Task<IActionResult> Delete([FromRoute] int id)
 		{
-			var alertListModel = await _context.AlertRule.FirstOrDefaultAsync(x => x.Id == Id);
+			_logger.LogInformation("Delete Method Triggerd.");
+			var alertListModel = await _alertRepository.DeleteAsync(id);
 
 			if (alertListModel == null)
 			{
 				return NotFound(ApiResponse<object?>.NotFound("No record found"));
 			}
-
-			_context.AlertRule.Remove(alertListModel);
-			await _context.SaveChangesAsync();
-
-			return Ok(ApiResponse<object?>.Success(null, $"Successfully Deleted Alert {Id}", 200));
+			return Ok(ApiResponse<object?>.Success(null, $"Successfully Deleted Alert {id}", 200));
 		}
 
 		[HttpPost("{id:int}/evaluate")]
 		public async Task<IActionResult> EvaluateAlert([FromRoute] int id)
 		{
-
-			// STEPS
-			// 1. Check the alert is avaliable into database with watchlist id
-			// 2. Update the rate through service into database
-			// 3. Get the watchlist from Alert
-			// 4. Check the condition matched
-			// 5. If matched then create alert event.
-
-			if (!ModelState.IsValid)
-				return BadRequest(ModelState);
-
-			var alertRule = await _context.AlertRule.Where(x => x.Id == id).FirstOrDefaultAsync();
-			if (alertRule == null)
-			{
-				return NotFound(ApiResponse<object?>.ServerError(
-					$"Failed to fetch the alertrule for : {id}"));
-			}
-
-			var refreshResult = await _rateRefreshService.RefreshRateAsync(); // 
-			if (!refreshResult.Success)
-			{
-				return NotFound(ApiResponse<object?>.ServerError(
-					$"Failed to refresh rate: {refreshResult.Message}"));
-			}
-
-			var watchlistItem = await _context.WatchlistItems
-									.FirstOrDefaultAsync(x => x.Id == alertRule.WatchlistItemId);
-
-			if (watchlistItem == null)
-				return NotFound(ApiResponse<object?>.ServerError(
-					$"Watchlist item not found."));
-
-			var rateSnapShot = await _context.RateSnapShot
-					.FirstOrDefaultAsync(r => r.QuoteCurrency == watchlistItem.QuoteCurrency);
-			if (rateSnapShot == null)
-			{
-				return NotFound(ApiResponse<object?>.ServerError(
-					$"Rate snapshot not found."));
-			}
-			// now check condition
-			decimal rateValue = rateSnapShot.Rate;
-
-			var results = new List<object>();
-
-			decimal thresholdValue = decimal.Parse(alertRule.Threshold);
-
-			var condition = alertRule.Condition.Trim();
-
-			bool isTriggered = false;
-
-			if (condition == ">")
-				isTriggered = rateValue > thresholdValue;
-			else if (condition == "<")
-				isTriggered = rateValue < thresholdValue;
-			else if (condition == ">=")
-				isTriggered = rateValue >= thresholdValue;
-			else if (condition == "<=")
-				isTriggered = rateValue <= thresholdValue;
-			else if (condition == "==")
-				isTriggered = rateValue == thresholdValue;
-			else if (condition == "!=")
-				isTriggered = rateValue != thresholdValue;
-
-			if (isTriggered)
-			{
-				var alertEvent = new AlertEvent
-				{
-					AlertRuleId = alertRule.Id,
-					Rate = rateValue.ToString(),
-					TriggerAt = DateTime.UtcNow
-				};
-
-				_context.AlertEvent.Add(alertEvent);
-			}
-
-			results.Add(new
-			{
-				AlertRuleId = alertRule.Id,
-				CurrentRate = rateValue,
-				Threshold = thresholdValue,
-				Condition = alertRule.Condition,
-				Triggered = isTriggered
-			});
-
-			await _context.SaveChangesAsync();
+			_logger.LogInformation("Evaluate Method Trigger.");
+			var result = await _alertService.EvaluateAsync(id);
 
 			return Ok(
 				ApiResponse<object?>.Success(
-					results,
+					result,
 					"Alert evaluation completed"
 				)
 			);

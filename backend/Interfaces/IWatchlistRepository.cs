@@ -9,7 +9,7 @@ namespace backend.Interfaces
     public interface IWatchlistRepository
     {
         Task<List<Watchlist>>  GetAllAsync();
-		Task<Watchlist?> GetByIdAsync(int id); // First or default and can be null so used ?
+		Task<Watchlist?> GetByIdAsync(int id); 
 		Task<Watchlist> CreateWatchlistAsync(Watchlist watchlistModel);
 
 		Task<Watchlist?> DeleteWatchlistAsync(int id);

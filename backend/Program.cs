@@ -20,6 +20,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddScoped<IWatchlistRepository, WatchlistRepository>();
 builder.Services.AddScoped<IWatchlistItemRepository, WatchlistItemRepository>();
+builder.Services.AddScoped<IAlertEvaluationService, AlertEvaluationService>();
 builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<RateRefreshService>();
