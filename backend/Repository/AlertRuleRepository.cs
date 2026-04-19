@@ -28,11 +28,6 @@ namespace backend.Repository
 			return await _context.AlertRule.FindAsync(Id);
 		}
 
-		public Task<AlertRule> EvaluateAlertAsync()
-		{
-			throw new NotImplementedException();
-		}
-
 		public async Task<List<AlertRule>> GetAllRuleAsync()
 		{
 			return await _context.AlertRule.ToListAsync();

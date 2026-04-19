@@ -12,7 +12,6 @@ namespace backend.Interfaces
 		Task<AlertRule?> GetByIdAsync(int id);
 		Task<AlertRule> CreateAlertRuleAsync(AlertRule alertRuleModel);
 		Task<AlertRule?> DeleteAsync(int id);
-		Task<AlertRule> EvaluateAlertAsync();
 
     }
 }
