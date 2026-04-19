@@ -153,7 +153,7 @@ backend/
 | GET    | `/api/AlertRule/{id}`          | Get a single alert rule by ID |
 | POST   | `/api/AlertRule`               | Create a new alert rule       |
 | DELETE | `/api/AlertRule/{id}`          | Delete an alert rule by ID    |
-| POST   | `/api/AlertRule/{id}/evaluate` | Evaluate Alert Rule           |
+| POST   | `/api/AlertRule/{id}/evaluate` | Evaluate Alert                |
 
 
 ### 2. Rates — `/api/Rates`
