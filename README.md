@@ -54,7 +54,7 @@ cd frontend
 npm install
  
 # 3. Create environment file
-echo "VITE_API_BASE_URL=/api" > .env.development
+echo "VITE_API_BASE_URL=/api" > .env
  
 # 4. Start the dev server
 npm run dev
