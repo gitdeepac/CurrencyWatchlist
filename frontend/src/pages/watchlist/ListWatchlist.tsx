@@ -91,7 +91,7 @@ const ListWatchlist = () => {
             <div className="card-header d-flex justify-content-between">
               <h4 className="m-0">Watchlist - Listing</h4>
               <div className="d-flex gap-2">
-                <NavLink to="/watchlist/add" className="btn btn-primary">
+                <NavLink to="/watchlist/add" className="btn btn-primary" data-cy="createWatchlistBtn">
                   Create Watchlist
                 </NavLink>
                 <button
@@ -144,6 +144,7 @@ const ListWatchlist = () => {
                               className="btn btn-danger"
                               onClick={() => handleDelete(item.id)}
                               disabled={isDeleting === item.id}
+							  data-cy="deleteBtn"
                             >
                               {isDeleting === item.id
                                 ? "Deleting..."

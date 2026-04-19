@@ -3,7 +3,6 @@ import { NavLink } from "react-router-dom";
 import { watchlistApi } from "../../services/watchlist/api";
 import { toast } from "react-toastify";
 
-
 const CreateWatchlist = () => {
   const [formValue, setFormValue] = useState({ name: "" });
   const [loading, setLoading] = useState(false);
@@ -24,17 +23,20 @@ const CreateWatchlist = () => {
     // API call
     try {
       var responseWatchlist = await watchlistApi.create(formValue);
-      toast.success(responseWatchlist.message);
+      toast.success(responseWatchlist.data.message);
+      // Form Reset
+      setFormValue({ name: "" });
     } catch (err: any) {
-      setError(err.response?.data?.title);
+      const data = err.response?.data;
+      if (data?.errors) {
+        const messages = Object.values(data.errors).flat().join(", ");
+        setError(messages);
+      } else {
+        setError(data?.title ?? "Something went wrong."); // fallback
+      }
     } finally {
       setLoading(false);
     }
-
-    // Form Reset
-    setFormValue({
-      name: "",
-    });
   };
 
   return (
@@ -62,11 +64,12 @@ const CreateWatchlist = () => {
                   </div>
                 </div>
                 <div className="row mt-4">
-                  <div className="col-12 d-flex justify-content-end">
+                  <div className="col-12 d-flex justify-content-end gap-2">
                     <button
                       className="btn btn-primary"
                       onClick={handleSubmit}
                       disabled={loading || !formValue.name}
+                      data-cy="createBtn"
                     >
                       {loading ? "Creating..." : "Create Watchlist"}
                     </button>

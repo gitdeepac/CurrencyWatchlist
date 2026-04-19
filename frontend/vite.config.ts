@@ -7,5 +7,11 @@ export default defineConfig({
   server: {
     port: 3000,
     strictPort: true, // This prevents Vite from trying the next port if 3000 is busy
+    proxy: {
+      "/api": {
+        target: "http://localhost:5109",
+        changeOrigin: true,
+      },
+    },
   },
 });
