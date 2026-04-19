@@ -23,7 +23,6 @@
 - dotnet add package Microsoft.NET.Test.Sdk
 - dotnet add package xunit.runner.visualstudio
 # Run tests
-- cd ..
 - dotnet test
 
 
