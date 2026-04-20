@@ -92,7 +92,7 @@ const CreateWatchlistItems = () => {
                 <div className="row mt-4">
                   <div className="col-12 d-flex justify-content-end d-flex gap-2">
                     <button
-                      className="btn btn-primary"
+                      className="btn btn-primary createWatchlistItemBtn"
                       onClick={handleSubmit}
                       disabled={loading}
                     >
