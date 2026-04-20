@@ -23,7 +23,7 @@ public class AlertEvaluationService : IAlertEvaluationService
 		_logger = logger;
 	}
 
-	public async Task<AlertEvaluationResult> EvaluateAsync(int id)
+	public async Task<AlertEvaluationResult?> EvaluateAsync(int id)
 	{
 
 		// STEPS
