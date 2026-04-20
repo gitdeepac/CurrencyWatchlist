@@ -9,6 +9,7 @@ interface WatchlistItem {
   baseCurrency: string;
   quoteCurrency: string;
   createAt: string;
+  latestRate: any;
 }
 const ListWatchlistItem = () => {
   const [watchlistItemList, setWatchlistItemList] = useState<WatchlistItem[]>(
@@ -110,13 +111,14 @@ const ListWatchlistItem = () => {
                       <th scope="col">Watchlist Id</th>
                       <th scope="col">Base Currency</th>
                       <th scope="col">Quote Currency </th>
+                      <th scope="col">Latest Rate </th>
                       <th scope="col">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {watchlistItemList.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="text-center text-muted">
+                        <td colSpan={6} className="text-center text-muted">
                           No watchlists Items found.
                         </td>
                       </tr>
@@ -127,6 +129,7 @@ const ListWatchlistItem = () => {
                           <td>{item.watchlistId}</td>
                           <td>{item.baseCurrency}</td>
                           <td>{item.quoteCurrency}</td>
+                          <td>{item.latestRate}</td>
                           <td className="d-flex gap-2">
                             <NavLink
                               to={`alertService/${item.id}`}
