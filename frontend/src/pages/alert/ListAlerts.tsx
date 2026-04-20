@@ -78,7 +78,7 @@ const ListAlerts = () => {
       }
 
       
-      const result = evaluateResult.data.data[0];
+      const result = evaluateResult.data.data;
 	  if(result.triggered){
 		setEvalResults((prev) => ({ ...prev, [alertId]: result }));
 		toast.success("Yes Condition matched")

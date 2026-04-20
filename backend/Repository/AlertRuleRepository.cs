@@ -33,9 +33,9 @@ namespace backend.Repository
 			return await _context.AlertRule.ToListAsync();
 		}
 
-		public async Task<AlertRule?> GetByIdAsync(int id)
+		public async Task<List<AlertRule>> GetAllByWatchlistItemIdAsync(int id)
 		{
-			return await _context.AlertRule.FirstOrDefaultAsync(x => x.Id == id);
+			return await _context.AlertRule.Where(x => x.WatchlistItemId == id).ToListAsync();
 		}
 	}
 }

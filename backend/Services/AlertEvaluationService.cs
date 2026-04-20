@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using backend.Data;
+using backend.Dtos.Alert;
 using backend.Helpers;
 using backend.Interfaces;
 using backend.Models;
@@ -22,7 +23,7 @@ public class AlertEvaluationService : IAlertEvaluationService
 		_logger = logger;
 	}
 
-	public async Task<ApiResponse<object?>> EvaluateAsync(int id)
+	public async Task<AlertEvaluationResult> EvaluateAsync(int id)
 	{
 
 		// STEPS
@@ -35,23 +36,23 @@ public class AlertEvaluationService : IAlertEvaluationService
 			.FirstOrDefaultAsync(x => x.Id == id);
 
 		if (alertRule == null)
-			return ApiResponse<object?>.NotFound("Alert rule not found");
+			return null;
 
 		var refreshResult = await _rateRefreshService.RefreshRateAsync();
 		if (!refreshResult.Success)
-			return ApiResponse<object?>.ServerError(refreshResult.Message);
+			return null;
 
 		var watchlistItem = await _context.WatchlistItems
 			.FirstOrDefaultAsync(x => x.Id == alertRule.WatchlistItemId);
 
 		if (watchlistItem == null)
-			return ApiResponse<object?>.NotFound("Watchlist item not found");
+			return null;
 
 		var rateSnapShot = await _context.RateSnapShot
 			.FirstOrDefaultAsync(r => r.QuoteCurrency == watchlistItem.QuoteCurrency);
 
 		if (rateSnapShot == null)
-			return ApiResponse<object?>.NotFound("Rate snapshot not found");
+			return null;
 
 		decimal rateValue = rateSnapShot.Rate;
 		decimal thresholdValue = decimal.Parse(alertRule.Threshold);
@@ -73,7 +74,7 @@ public class AlertEvaluationService : IAlertEvaluationService
 
 		await _context.SaveChangesAsync();
 
-		var result = new
+		var result =  new AlertEvaluationResult
 		{
 			AlertRuleId = alertRule.Id,
 			CurrentRate = rateValue,
@@ -82,7 +83,7 @@ public class AlertEvaluationService : IAlertEvaluationService
 			Triggered = isTriggered
 		};
 
-		return ApiResponse<object?>.Success(result, "Alert evaluation completed");
+		return result;
 	}
 
 	private bool EvaluateCondition(decimal rate, decimal threshold, string condition)

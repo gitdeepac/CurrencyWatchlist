@@ -9,7 +9,7 @@ namespace backend.Interfaces
     public interface IAlertRuleRepository
     {
         Task<List<AlertRule>>  GetAllRuleAsync();
-		Task<AlertRule?> GetByIdAsync(int id);
+		Task<List<AlertRule>> GetAllByWatchlistItemIdAsync(int id);
 		Task<AlertRule> CreateAlertRuleAsync(AlertRule alertRuleModel);
 		Task<AlertRule?> DeleteAsync(int id);
 

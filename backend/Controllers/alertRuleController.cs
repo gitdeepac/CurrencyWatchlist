@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using backend.Data;
-using backend.Dtos.Rate;
+using backend.Dtos.Alert;
 using backend.Helpers;
 using backend.Interfaces;
 using backend.Mappers;
@@ -39,12 +39,8 @@ namespace backend.Controllers
 		{
 			_logger.LogInformation("Trigger Repo to get all rules.");
 			var alertResults = await _alertRepository.GetAllRuleAsync();
-			
-			return Ok(ApiResponse<object?>.Success(
-				data: alertResults,
-				message: "Successfully fetch alert rule list",
-				statusCode: 200
-			));
+
+			return Ok(ApiResponse<object?>.Success(alertResults,"Successfully fetch alert rule list",200));
 		}
 
 		// Returns single record, 404 if missing
@@ -52,14 +48,17 @@ namespace backend.Controllers
 		public async Task<IActionResult> GetById([FromRoute] int id)
 		{
 			_logger.LogInformation("Trigger Repo to get data by Id.");
-			var alertRuleResult = await _alertRepository.GetByIdAsync(id);
-			
+			var alertRuleResult = await _alertRepository.GetAllByWatchlistItemIdAsync(id);
+
 			if (alertRuleResult == null)
 			{
 				return NotFound(ApiResponse<object?>.NotFound("No record found"));
 			}
 
-			return Ok(ApiResponse<object?>.Success(alertRuleResult, "Successfully fetch alert rule", 200));
+			return Ok(ApiResponse<object?>.Success(
+				alertRuleResult,
+				"Successfully fetch alert rule list",
+				200));
 		}
 
 		// Post new alert rule from request body
@@ -101,7 +100,8 @@ namespace backend.Controllers
 			return Ok(
 				ApiResponse<object?>.Success(
 					result,
-					"Alert evaluation completed"
+					"Alert evaluation completed",
+					200
 				)
 			);
 		}
