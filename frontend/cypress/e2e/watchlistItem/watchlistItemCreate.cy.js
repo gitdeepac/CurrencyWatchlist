@@ -67,11 +67,11 @@ describe("Create Watchlist Page", () => {
 
     cy.wait("@createWatchlist");
 
-    // Form reset
+    
     cy.get("input[name='baseCurrency']").should("have.value", "");
     cy.get("input[name='quoteCurrency']").should("have.value", "");
 
-    // Toast (basic check)
+    
     cy.contains("Successfully Created Watchlist Item.");
   });
 

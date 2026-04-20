@@ -1,6 +1,6 @@
 describe("Watchlist - CRUD Operations", () => {
   beforeEach(() => {
-    cy.visit("/watchlist/add"); // ✅ correct route
+    cy.visit("/watchlist/add"); 
   });
   it("should create a new watchlist", () => {
     cy.intercept("POST", "http://localhost:3000/api/watchlists", {
