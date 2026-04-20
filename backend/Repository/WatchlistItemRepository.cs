@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using backend.Data;
+using backend.Dtos.WatchlistItem;
 using backend.Interfaces;
 using backend.Models;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,7 @@ namespace backend.Repository
 		{
 			_context = context;
 		}
+
 		public async Task<WatchlistItems> CreateWatchlistAsync(WatchlistItems watchlistModel)
 		{
 			await _context.WatchlistItems.AddAsync(watchlistModel);
@@ -37,10 +39,22 @@ namespace backend.Repository
 		}
 
 
-		public async Task<WatchlistItems?> GetByIdAsync(int Id, int watchlistId)
+		public async Task<WatchlistItemDto?> GetByIdAsync(int Id, int watchlistId)
 		{
-			return await _context.WatchlistItems
+			var item = await _context.WatchlistItems
 					  .FirstOrDefaultAsync(i => i.Id == Id && i.WatchlistId == watchlistId);
+			if (item == null)
+				return null;
+
+
+			var result = new WatchlistItemDto
+			{
+				Id = item.Id,
+				WatchlistId = item.WatchlistId,
+				BaseCurrency = item.BaseCurrency,
+				QuoteCurrency = item.QuoteCurrency,
+			};
+			return result;
 		}
 
 		public async Task<bool> ExistsAsync(int watchlistId, string baseCurrency, string quoteCurrency)
@@ -51,11 +65,33 @@ namespace backend.Repository
 							&& x.QuoteCurrency == quoteCurrency);
 		}
 
-		public async Task<List<WatchlistItems>> GetAllAsync(int watchlistId)
+		public async Task<List<WatchlistItemDto>> GetAllAsync(int watchlistId)
 		{
-			return await _context.WatchlistItems
-						.Where(x => x.WatchlistId == watchlistId)
-						.ToListAsync();
+
+			//1. Get Watch list Items
+			//2. Get Distinct Currency List
+			//3. Get Rate through Currency 
+			//4. Return result.
+			var items = await _context.WatchlistItems.Where(x => x.WatchlistId == watchlistId).ToListAsync();
+			var currencies = items.Select(x => x.QuoteCurrency).Distinct().ToList();
+			var rates = await _context.RateSnapShot.Where(r => currencies.Contains(r.QuoteCurrency)).ToListAsync();
+
+			var result = items.Select(item =>
+			{
+				var rate = rates.FirstOrDefault(r =>
+					r.QuoteCurrency == item.QuoteCurrency);
+
+				return new WatchlistItemDto
+				{
+					Id = item.Id,
+					WatchlistId = item.WatchlistId,
+					BaseCurrency = item.BaseCurrency,
+					QuoteCurrency = item.QuoteCurrency,
+					LatestRate = rate?.Rate
+				};
+			}).ToList();
+
+			return result;
 		}
 	}
 }

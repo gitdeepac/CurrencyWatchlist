@@ -32,9 +32,7 @@ namespace backend.Controllers
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);
 
-			//var watchlistExists = await _context.Watchlist.AnyAsync(w => w.Id == watchlistId);
 			var watchlistExist = await _watchlistRepository.GetByIdAsync(watchlistId);
-
 
 			if (watchlistExist == null)
 			{
@@ -46,7 +44,7 @@ namespace backend.Controllers
 			if (watchlistItem == null)
 				return NotFound(ApiResponse<object?>.NotFound($"Item was not found in watchlist {watchlistId}"));
 
-			var watchlistDto = watchlistItem.Select(wl => wl.ToWatchlistItemDto());
+			var watchlistDto = watchlistItem.Select(wl => wl);
 			return Ok(ApiResponse<object?>.Success(watchlistDto, "Successfully Fetch all WatchlistItems", 200));
 		}
 
@@ -72,7 +70,7 @@ namespace backend.Controllers
 			if (watchlistItem == null)
 				return NotFound(ApiResponse<object?>.NotFound($"Item with ID {Id} was not found in watchlist {watchlistId}"));
 
-			return Ok(ApiResponse<object?>.Success(watchlistItem.ToWatchlistItemDto(), "Successfully Fetch WatchlistItems", 200));
+			return Ok(ApiResponse<object?>.Success(watchlistItem, "Successfully Fetch WatchlistItems", 200));
 		}
 
 		// Adds a currency pair item to a watchlist
